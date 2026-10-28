@@ -265,16 +265,16 @@
     <div class="slider-row">
       <div class="slider-head">
         <label class="slider-label" for="slider">Variación de la recaudación coparticipable</label>
-        <span class="slider-readout" id="readout">−8,6&nbsp;%</span>
+        <span class="slider-readout" id="readout">−7,7&nbsp;%</span>
       </div>
-      <input type="range" id="slider" min="-30" max="30" step="0.1" value="-8.6" aria-describedby="readout">
+      <input type="range" id="slider" min="-30" max="30" step="0.1" value="-7.7" aria-describedby="readout">
       <div class="slider-ticks">
         <span>−30&nbsp;%</span><span>−15&nbsp;%</span><span>0&nbsp;%</span><span>+15&nbsp;%</span><span>+30&nbsp;%</span>
       </div>
     </div>
 
     <div class="presets">
-      <button type="button" class="preset primary" id="preset-ref">Caída de comienzos de 2026: −8,6&nbsp;%</button>
+      <button type="button" class="preset primary" id="preset-ref">Caída de comienzos de 2026: −7,7&nbsp;%</button>
       <button type="button" class="preset ghost" id="preset-reset">Reiniciar (0&nbsp;%)</button>
     </div>
 
@@ -282,13 +282,13 @@
 
     <div class="stat">
       <div class="stat-eyebrow">Impacto en los ingresos totales de Córdoba</div>
-      <div class="stat-value" id="stat-value">−3,5&nbsp;%</div>
+      <div class="stat-value" id="stat-value">−4,0&nbsp;%</div>
       <div class="stat-sub" id="stat-sub"></div>
       <div class="stat-micro">
-        La coparticipación explicó el 40,4&nbsp;% de los ingresos de Córdoba en 2025, así que
-        el impacto en sus ingresos es el shock multiplicado por esa proporción. Como el
-        reparto es proporcional al coeficiente, en porcentaje de su coparticipación Córdoba
-        pierde lo mismo que cualquier otra provincia.
+        La parte de la coparticipación que se reparte por coeficiente explicó el 52,4&nbsp;% de
+        los ingresos de Córdoba en 2025, así que el impacto en sus ingresos es el shock
+        multiplicado por esa proporción. Como el reparto es proporcional al coeficiente, en
+        porcentaje de su coparticipación Córdoba pierde lo mismo que cualquier otra provincia.
       </div>
     </div>
 
@@ -305,15 +305,17 @@
 
   <div class="footnote">
     <p>
-      Base de cálculo: coparticipación federal recibida por Córdoba en 2025
-      ($3,61 billones) e ingresos totales de la provincia ese año ($8,94 billones), ambos
-      del archivo de recaudación de la Dirección General de Rentas de Córdoba. El shock se
+      Base de cálculo: coparticipación federal recibida por Córdoba en 2025 ($4,74
+      billones, incluido el Financiamiento Educativo) e ingresos totales de la provincia ese
+      año ($8,94 billones), ambos del archivo de recaudación de la Dirección General de
+      Rentas de Córdoba. La compensación del Consenso Fiscal ($0,06 billones) queda afuera
+      del shock porque es un monto fijo, no un porcentaje de lo recaudado. El shock se
       reparte de forma proporcional a toda la masa coparticipable, sin distinguir por
       impuesto, y no modela respuestas de la provincia (más recaudación propia, ajuste de
       gasto, deuda).
     </p>
     <p>
-      El escenario de −8,6&nbsp;% sale de calibrar el modelo con la caída de recaudación del
+      El escenario de −7,7&nbsp;% sale de calibrar el modelo con la caída de recaudación del
       primer cuatrimestre de 2026 que reportó IARAF. Los números son una foto de los datos
       del repositorio y no se actualizan solos. Análisis completo, supuestos y limitaciones en
       <a href="https://github.com/llorenzomagnano-sys/analisis-de-la-coparticipacion-federal-con-foco-en-cordoba">el repositorio del proyecto</a>.
@@ -323,13 +325,14 @@
 
 <script>
 (function () {
-  // Datos 2025 de data/processed/dependencia_fiscal_cordoba.csv
-  var COPARTICIPACION_CORDOBA_2025 = 3606636592256.87;
+  // Datos 2025 de data/processed/dependencia_fiscal_cordoba.csv: coparticipación menos
+  // la compensación del Consenso Fiscal (la parte que se reparte por coeficiente).
+  var COPARTICIPACION_PROPORCIONAL_CORDOBA_2025 = 4683858285352.35;
   var INGRESOS_TOTALES_CORDOBA_2025 = 8936027170277.15;
   var COEF_CORDOBA = 0.05039652;
   // Masa coparticipable total calibrada para que el coeficiente de Córdoba reproduzca
-  // su coparticipación 2025 (igual que base_calibrada_cordoba en Python).
-  var RECAUDACION_BASE = COPARTICIPACION_CORDOBA_2025 / COEF_CORDOBA;
+  // esa coparticipación 2025 (igual que base_calibrada_cordoba en Python).
+  var RECAUDACION_BASE = COPARTICIPACION_PROPORCIONAL_CORDOBA_2025 / COEF_CORDOBA;
 
   var slider = document.getElementById("slider");
   var readout = document.getElementById("readout");
@@ -379,7 +382,7 @@
 
   slider.addEventListener("input", render);
   document.getElementById("preset-ref").addEventListener("click", function () {
-    slider.value = "-8.6";
+    slider.value = "-7.7";
     render();
   });
   document.getElementById("preset-reset").addEventListener("click", function () {

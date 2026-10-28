@@ -20,7 +20,7 @@ Todos los archivos los descargué o los conseguí a mano y los versioné acá ta
 
 - **Organismo**: Secretaría de Hacienda, Ministerio de Economía de la Nación.
 - **URL de origen**: <https://www.argentina.gob.ar/economia/sechacienda/asuntosprovinciales/ron>
-- **Archivo usado**: `coparticipacion/serie_ron_2003_2025.csv` — 2003 a 2025, un registro por provincia/año/concepto (20 conceptos distintos de RON, no solo coparticipación Ley 23.548). Qué conceptos uso exactamente para este núcleo está detallado en `docs/methodology.md`.
+- **Archivo usado**: `coparticipacion/serie_ron_2003_2025.csv` — 2003 a 2025, un registro por provincia/año/concepto (14 conceptos distintos de RON, no solo coparticipación Ley 23.548). Qué conceptos uso exactamente para este núcleo está detallado en `docs/methodology.md`.
 - **Contexto normativo**: distribución automática y diaria bajo el régimen de la Ley 23.548 (1988) y modificaciones posteriores (por ejemplo, la compensación por el Consenso Fiscal desde 2018). El archivo agrega esa distribución diaria a nivel anual.
 
 ### Índice de Precios al Consumidor (IPC)

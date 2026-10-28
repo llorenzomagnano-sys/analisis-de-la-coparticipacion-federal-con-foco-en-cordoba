@@ -1,4 +1,4 @@
-"""Chequeos de consistencia del procesamiento de datos (Núcleos 1, 2 y 4).
+"""Chequeos de consistencia del procesamiento de datos (Núcleos 1, 2, 4 y 5).
 
 Leen los datos versionados en data/raw/ y data/processed/. Correr con:
     pytest scripts/test_procesamiento.py
@@ -7,12 +7,15 @@ import pandas as pd
 import pytest
 
 from build_coefficients_comparison import OUTPUT_PATH as APORTE_PATH
+from build_comparativo_provincias import build_comparativo
 from build_dependencia_fiscal import build_ratio, calcular_sensibilidad
 from process_coparticipacion import (
+    CONCEPTO_GANANCIAS_PRE_2018,
     OUTPUT_PATH as COPART_PATH,
     load_ipc_empalmado,
     load_ipc_ferreres_var_pct,
     load_ipc_promedio_anual,
+    load_ron_por_concepto,
 )
 
 
@@ -61,13 +64,37 @@ def test_ratio_de_dependencia_usa_partes_del_mismo_total(dependencia):
     assert (d["coparticipacion_pesos"] + d["recursos_propios_pesos"] <= d["ingresos_totales_pesos"]).all()
 
 
-def test_archivo_provincial_esta_en_pesos_y_coincide_con_nacion_en_2015_2017(dependencia):
-    # Si el archivo estuviera en millones, la diferencia sería de seis órdenes de magnitud.
-    diferencias = dependencia.loc[2015:2017, "diferencia_ron_vs_provincia"]
-    assert (diferencias.abs() < 0.01).all()
+def test_nacion_y_provincia_registran_la_misma_coparticipacion_todos_los_anios(dependencia):
+    # Dos fuentes independientes (Hacienda y Rentas de Córdoba) con la misma definición.
+    # Si el archivo provincial estuviera en millones, la diferencia sería de seis órdenes
+    # de magnitud; si faltara un concepto, de 10% o más.
+    assert (dependencia["diferencia_ron_vs_provincia"].abs() < 0.02).all()
 
 
-def test_sensibilidad_es_el_shock_por_el_ratio_de_dependencia(dependencia):
+def test_bruto_y_neto_mas_financiamiento_educativo_son_el_mismo_concepto():
+    # Hacienda informa el bruto en 2003-2005 y 2011, y el neto + Financiamiento Educativo
+    # el resto de los años. Si fueran conceptos distintos, la participación de cada
+    # jurisdicción saltaría al cambiar de uno a otro (con solo el neto, hasta 1,7 puntos).
+    df = load_ron_por_concepto()
+    ley_23548 = df[~df["impuesto"].isin(
+        [CONCEPTO_GANANCIAS_PRE_2018, "consenso fiscal ley 27429 compensacion"]
+    )]
+    montos = ley_23548.pivot_table(index="anio", columns="provincia", values="monto", aggfunc="sum")
+    participacion = montos.div(montos.sum(axis=1), axis=0)
+    # Hasta 2015: después cambian el régimen de CABA y la detracción para la ANSES.
+    assert participacion.loc[2003:2015].diff().abs().max().max() < 0.0025
+
+
+def test_sin_compensacion_cada_jurisdiccion_recibe_su_coeficiente_legal():
+    tabla = build_comparativo()
+    diferencia = tabla["participacion_2025_sin_compensacion"] - tabla["coeficiente_legal_renormalizado"]
+    assert (diferencia.abs() < 0.002).all()
+    assert tabla["participacion_2025"].sum() == pytest.approx(1.0)
+
+
+def test_sensibilidad_es_el_shock_por_la_parte_proporcional_de_la_dependencia(dependencia):
     sens = calcular_sensibilidad(2025, [-0.10]).iloc[0]
-    esperado = -0.10 * dependencia.loc[2025, "ratio_coparticipacion_ingresos"]
+    fila = dependencia.loc[2025]
+    proporcional = fila["coparticipacion_pesos"] - fila["compensacion_consenso_fiscal_pesos"]
+    esperado = -0.10 * proporcional / fila["ingresos_totales_pesos"]
     assert sens["impacto_pct_ingresos_totales_cordoba"] == pytest.approx(esperado)
