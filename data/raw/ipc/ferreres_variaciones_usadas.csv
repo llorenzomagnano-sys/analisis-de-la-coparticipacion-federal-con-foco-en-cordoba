@@ -1,0 +1,15 @@
+tabla,nombre_tabla_en_la_fuente,anio,variacion_anual_promedio,marcado_con_asterisco_en_la_fuente
+A,Indice de Precios al Consumidor  GBA (INDEC),2004,0.04415717923419149,False
+A,Indice de Precios al Consumidor  GBA (INDEC),2005,0.09641662847345978,False
+A,Indice de Precios al Consumidor  GBA (INDEC),2006,0.10897803099503056,False
+B,Indice de Precios al Consumidor  GBA (estimaciones privadas),2007,0.14303908726012304,False
+B,Indice de Precios al Consumidor  GBA (estimaciones privadas),2008,0.2293375635841126,False
+B,Indice de Precios al Consumidor  GBA (estimaciones privadas),2009,0.1653515177703737,False
+B,Indice de Precios al Consumidor  GBA (estimaciones privadas),2010,0.2245451917807375,False
+B,Indice de Precios al Consumidor  GBA (estimaciones privadas),2011,0.24300764231951044,False
+B,Indice de Precios al Consumidor  GBA (estimaciones privadas),2012,0.23410393189707057,False
+B,Indice de Precios al Consumidor  GBA (estimaciones privadas),2013,0.2457875621706782,False
+B,Indice de Precios al Consumidor  GBA (estimaciones privadas),2014,0.3947392291320031,False
+B,Indice de Precios al Consumidor  GBA (estimaciones privadas),2015,0.2928397693956435,True
+B,Indice de Precios al Consumidor  GBA (estimaciones privadas),2016,0.35756062880670836,False
+B,Indice de Precios al Consumidor  GBA (estimaciones privadas),2017,0.23854937836474366,False

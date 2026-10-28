@@ -3,13 +3,13 @@
   "fecha_incorporacion_al_repo": "2026-08-20",
   "archivos": [
     {
-      "archivo": "fundacion_norte_y_sur_orlando_ferreres.xlsx",
-      "fuente": "Fundación Norte y Sur / Orlando J. Ferreres (archivo obtenido en forma directa, sin URL pública de origen verificada)",
+      "archivo": "ferreres_variaciones_usadas.csv",
+      "fuente": "Fundación Norte y Sur / Orlando J. Ferreres, hoja \"IPC \" del archivo de series históricas de precios (obtenido en forma directa, sin URL pública de origen verificada)",
       "fecha_incorporacion": "2026-09-12",
-      "descripcion": "Base de series históricas de precios de Argentina. Hoja \"IPC \" (con espacio al final) contiene dos tablas anuales relevantes: (A) \"Índice de Precios al Consumidor GBA (INDEC)\", continua ~1810-2025, base dic-2016=100 -- para 2007-2014 reproduce las mismas tasas bajas y desacreditadas del IPC oficial de la época, es decir NO está corregida; (B) \"Índice de Precios al Consumidor GBA (estimaciones privadas)\", 2006-2025, base dic-2015=100 -- para 2007-2015 reporta tasas mucho más altas, consistentes con las estimaciones privadas contemporáneas al período de intervención del INDEC. Ambas tablas tienen años marcados con asterisco y una nota \"* Ver metodología\" que no se pudo resolver: el archivo no incluye ninguna hoja de metodología. Limitación documentada, no se asumió su significado.",
-      "cobertura": "tabla A: ~1810-2025 anual; tabla B: 2006-2025 anual",
+      "descripcion": "Transcripción de solo las 14 tasas de variación % anual del promedio que usa el empalme: tabla A \"Índice de Precios al Consumidor GBA (INDEC)\" para 2004-2006 y tabla B \"Índice de Precios al Consumidor GBA (estimaciones privadas)\" para 2007-2017, tal como figuran en la fuente, con la marca de asterisco de cada año. El archivo completo de la fuente (una compilación con series desde ~1810) no se redistribuye en el repositorio. Para 2007-2014 la tabla A reproduce las tasas desacreditadas del IPC oficial de la época, por eso ese tramo sale de la tabla B. Las tablas marcan algunos años con asterisco y una nota \"* Ver metodología\" que no se pudo resolver: el archivo original no incluye ninguna hoja de metodología. Limitación documentada, no se asumió su significado.",
+      "cobertura": "tabla A: 2004-2006; tabla B: 2007-2017 (anual)",
       "usado_en_nucleo_1": true,
-      "uso": "deflactor de la serie de coparticipación 2003-2015: tabla A para 2003-2006 (tramo confiable, pre-intervención), tabla B para 2007-2015 (tramo de desconfianza estadística sobre el IPC oficial). Ver docs/methodology.md, sección de empalme. El resto de la hoja (datos anteriores a 2003, y la hoja \"IPC Nacional\" que replica la serie oficial 2016-2025 ya usada) no se incorpora al pipeline."
+      "uso": "empalme del deflactor hacia atrás desde el promedio 2016: la tasa 2017 de la tabla B estima el promedio 2016 a partir del promedio oficial 2017; 2007-2016 (tabla B) y 2004-2006 (tabla A) encadenan hasta 2003. Ver docs/methodology.md."
     },
     {
       "archivo": "serie_ipc_divisiones.csv",

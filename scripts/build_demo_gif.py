@@ -31,6 +31,7 @@ sys.path.insert(0, str(BASE_DIR / "scripts"))
 from simulator import simular_shock  # noqa: E402
 from coeficientes_ley23548 import COEFICIENTES_COPARTICIPACION  # noqa: E402
 from build_dependencia_fiscal import base_calibrada_cordoba  # noqa: E402
+from calibracion_iaraf import calibrar  # noqa: E402
 
 OUTPUT_PATH = BASE_DIR / "output" / "figures" / "simulador_interactivo_demo.gif"
 
@@ -44,9 +45,11 @@ SURFACE = "#fcfcfb"
 
 RANGO_METER = 15  # el meter cubre -15% a +15%
 
-# Recorrido del "arrastre del slider": 0 -> -15 -> +10 -> -8.6 (escenario de comienzos de 2026) -> 0.
-# Se interpola entre estos puntos para que la animación se sienta fluida, no a saltos.
-KEYFRAMES_PCT = [0, -15, 10, -8.6, 0]
+# Recorrido del "arrastre del slider": 0 -> -15 -> +10 -> escenario de comienzos de 2026
+# (calibrado con IARAF) -> 0. Se interpola entre estos puntos para que la animación se
+# sienta fluida, no a saltos.
+ESCENARIO_2026_PCT = round(calibrar()["variacion_implicita"] * 100, 1)
+KEYFRAMES_PCT = [0, -15, 10, ESCENARIO_2026_PCT, 0]
 PASOS_POR_TRAMO = 18
 
 
