@@ -11,7 +11,7 @@
       "limitacion_de_alcance": "La nota al pie (1) de la hoja 'Referencias' aclara: \"Se incluye en esta clasificación sólo los recursos provinciales en los que la Dirección General de Rentas es la encargada de su recaudación. Se excluyen aquellos recaudados por otras entidades públicas provinciales, por ejemplo, el Fondo para el Desarrollo Energético Provincial recaudado por EPEC.\" Es decir, la fila 'Total' NO es el ingreso corriente total del sector público provincial en sentido de ejecución presupuestaria -- excluye lo recaudado por EPEC y otros organismos descentralizados. Se usa igual como la mejor proxy disponible.",
       "problema_de_formato_detectado": "La columna de fecha correspondiente a diciembre de 2023 está guardada como texto ('dic-23') en vez de una fecha real, a diferencia de todas las demás columnas. scripts/build_dependencia_fiscal.py la parsea aparte.",
       "usado_en_nucleo_4": true,
-      "uso": "Núcleo 4: numerador (fila 1.2.1) y denominador (fila 1) del ratio de dependencia, y recaudación propia (fila 1.1) en pesos constantes",
+      "uso": "Núcleo 4: numerador (filas 1.2.1 + 1.2.3 + 1.2.5.1) y denominador (fila 1) del ratio de dependencia, compensación del Consenso Fiscal (filas 1.2.1.2 y 1.2.1.3) para calibrar el simulador, y recaudación propia (fila 1.1) en pesos constantes",
       "nombre_original": "Serie-recaudacion-provincial_Ene15-Ago26.xlsx"
     }
   ]

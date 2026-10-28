@@ -5,10 +5,11 @@ Corre el pipeline completo del proyecto de punta a punta, con un solo comando:
     python run_all.py
 
 Pasos:
-  1. Procesamiento (Núcleo 1, 2 y 4): genera los CSV de data/processed/.
+  1. Procesamiento (Núcleos 1, 2, 4 y 5): genera los CSV de data/processed/.
   2. Tests automáticos: simulador (Núcleo 3) y chequeos de consistencia de los datos
-     procesados (IPC, participaciones, ratio de dependencia).
-  3. Regeneración de los 4 notebooks (ejecuta cada uno de punta a punta con
+     procesados (IPC, definición de coparticipación, participaciones, ratio de
+     dependencia).
+  3. Regeneración de los 5 notebooks (ejecuta cada uno de punta a punta con
      `jupyter nbconvert`, lo que a su vez regenera todas las figuras de
      output/figures/).
 
@@ -30,6 +31,7 @@ PASOS_PROCESAMIENTO = [
     ("Núcleo 1 — procesar y deflactar la serie de coparticipación", "process_coparticipacion.py"),
     ("Núcleo 2 — comparar aporte (PBG) vs. recibo (coparticipación)", "build_coefficients_comparison.py"),
     ("Núcleo 4 — ratio de dependencia fiscal de Córdoba", "build_dependencia_fiscal.py"),
+    ("Núcleo 5 — comparación entre las 24 jurisdicciones", "build_comparativo_provincias.py"),
 ]
 
 NOTEBOOKS = [
@@ -37,6 +39,7 @@ NOTEBOOKS = [
     "02_aporte_vs_recibo.ipynb",
     "03_simulador_sensibilidad.ipynb",
     "04_dependencia_fiscal_cordoba.ipynb",
+    "05_comparacion_provincias.ipynb",
 ]
 
 
@@ -57,7 +60,7 @@ def main() -> None:
         run(descripcion, [sys.executable, script], cwd=SCRIPTS_DIR)
 
     run(
-        "Tests: simulador (Núcleo 3) y consistencia del procesamiento (Núcleos 1, 2 y 4)",
+        "Tests: simulador (Núcleo 3) y consistencia del procesamiento (Núcleos 1, 2, 4 y 5)",
         [sys.executable, "-m", "pytest", "test_simulator.py", "test_procesamiento.py", "-v"],
         cwd=SCRIPTS_DIR,
     )

@@ -1,7 +1,7 @@
 name: CI
 
-# Corre el pipeline completo del proyecto (procesamiento de los 4 núcleos, tests del
-# simulador, y regeneración de los 4 notebooks) en cada push y pull request, para
+# Corre el pipeline completo del proyecto (procesamiento de los 5 núcleos, tests del
+# simulador y de consistencia de los datos, y regeneración de los 5 notebooks) en cada push y pull request, para
 # comprobar que el repositorio es reproducible de punta a punta con run_all.py. No
 # hace falta acceso a internet: data/raw/ ya viene versionada en el repositorio.
 

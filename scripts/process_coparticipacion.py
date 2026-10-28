@@ -25,12 +25,27 @@ base de Fundación Norte y Sur / Orlando Ferreres para 2003-2015:
 Detalle y tasas usadas en load_ipc_empalmado() y docs/methodology.md.
 
 Definición de "coparticipación" usada acá (decisión documentada, no es la única
-posible): suma de los conceptos que Hacienda reporta bajo
-  - "coparticipacion federal de impuestos ley 23548", o
-  - "coparticipacion federal de impuestos neta ley 26075"
-  (mutuamente excluyentes según el año -- se coalescen como el mismo concepto)
+posible): coparticipación Ley 23.548 bruta. Hacienda la informa de dos maneras según el
+año, y las dos dan el mismo total:
+  - "coparticipacion federal de impuestos ley 23548": el monto bruto (2003-2005 y 2011), o
+  - "coparticipacion federal de impuestos neta ley 26075" + "financiamiento educativo ley
+    26075": el neto de la parte que la Ley 26.075 afecta a educación, más esa parte
+    (2006-2010 y 2012-2025).
+  Tomar solo el neto en unos años y el bruto en otros mete saltos falsos de 5-33% según
+  la provincia (el Financiamiento Educativo no es proporcional al coeficiente). Con
+  bruto = neto + Financiamiento Educativo, la participación de cada provincia queda
+  estable año a año.
 más
   - "consenso fiscal ley 27429 compensacion" (desde 2018)
+más, solo hasta 2017,
+  - "impuesto a las ganancias": las asignaciones específicas de Ganancias (Fondo de
+    Infraestructura Básica Social para las provincias, Fondo del Conurbano para Buenos
+    Aires). El Consenso Fiscal (Ley 27.429, punto I.c) las eliminó y desde 2018 esa
+    plata entra por la Ley 23.548: el concepto desaparece de la serie y la
+    coparticipación salta ~17% en todas las provincias salvo Buenos Aires y CABA. Sin
+    sumarlo antes de 2018, la serie tendría un quiebre de definición en ese año.
+    Chequeo: para Córdoba, esta definición coincide con la del archivo provincial
+    (filas 1.2.1 + 1.2.3, Núcleo 4) en todos los años 2015-2025.
 
 Entradas:
   - data/raw/coparticipacion/serie_ron_2003_2025.csv
@@ -72,11 +87,17 @@ IPC_FERRERES_SHEET = "IPC "
 IPC_FERRERES_ANIOS_TABLA_A = [2004, 2005, 2006]
 IPC_FERRERES_ANIOS_TABLA_B = [2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017]
 
+CONCEPTO_BRUTO = "coparticipacion federal de impuestos ley 23548"
+CONCEPTO_FINANCIAMIENTO_EDUCATIVO = "financiamiento educativo ley 26075"
 CONCEPTOS_COPARTICIPACION = {
-    "coparticipacion federal de impuestos ley 23548",
+    CONCEPTO_BRUTO,
     "coparticipacion federal de impuestos neta ley 26075",
+    CONCEPTO_FINANCIAMIENTO_EDUCATIVO,
     "consenso fiscal ley 27429 compensacion",
 }
+# Asignaciones específicas de Ganancias que desde 2018 se reparten por la Ley 23.548.
+CONCEPTO_GANANCIAS_PRE_2018 = "impuesto a las ganancias"
+ULTIMO_ANIO_GANANCIAS_SEPARADO = 2017
 
 RECIPIENTES_NO_PROVINCIALES = {
     "fdo.compensador",
@@ -114,7 +135,12 @@ PROVINCIA_CANONICA = {
 }
 
 
-def load_ron_nominal() -> pd.DataFrame:
+def load_ron_por_concepto() -> pd.DataFrame:
+    """Filas de RON que entran en la definición de coparticipación, sin agregar.
+
+    Columnas: provincia (nombre canónico), anio, impuesto (concepto de Hacienda) y monto
+    (millones de pesos corrientes).
+    """
     df = pd.read_csv(RON_PATH, sep=";", encoding="latin-1")
     df.columns = [c.strip().lower() for c in df.columns]
     df["monto"] = df["monto"].astype(str).str.replace(",", ".", regex=False).astype(float)
@@ -123,7 +149,30 @@ def load_ron_nominal() -> pd.DataFrame:
 
     df = df[(df["ano"] >= SCOPE_START_YEAR) & (df["ano"] <= SCOPE_END_YEAR)]
     df = df[~df["provincia"].isin(RECIPIENTES_NO_PROVINCIALES)]
-    df = df[df["impuesto"].isin(CONCEPTOS_COPARTICIPACION)]
+    ganancias_pre_2018 = (df["impuesto"] == CONCEPTO_GANANCIAS_PRE_2018) & (
+        df["ano"] <= ULTIMO_ANIO_GANANCIAS_SEPARADO
+    )
+    if (
+        (df["impuesto"] == CONCEPTO_GANANCIAS_PRE_2018) & (df["ano"] > ULTIMO_ANIO_GANANCIAS_SEPARADO)
+    ).any():
+        raise SystemExit(
+            f"'{CONCEPTO_GANANCIAS_PRE_2018}' aparece después de {ULTIMO_ANIO_GANANCIAS_SEPARADO}: "
+            "revisar la definición antes de seguir."
+        )
+    df = df[df["impuesto"].isin(CONCEPTOS_COPARTICIPACION) | ganancias_pre_2018]
+
+    # El bruto ya incluye el Financiamiento Educativo: si un año trajera los dos, se
+    # contaría dos veces.
+    conceptos_por_anio = df.groupby("ano")["impuesto"].agg(set)
+    duplicados = [
+        int(anio) for anio, conceptos in conceptos_por_anio.items()
+        if {CONCEPTO_BRUTO, CONCEPTO_FINANCIAMIENTO_EDUCATIVO} <= conceptos
+    ]
+    if duplicados:
+        raise SystemExit(
+            f"Años con coparticipación bruta y Financiamiento Educativo a la vez: {duplicados}. "
+            "Revisar la definición antes de seguir."
+        )
 
     provincias_sin_mapear = set(df["provincia"]) - set(PROVINCIA_CANONICA)
     if provincias_sin_mapear:
@@ -133,9 +182,13 @@ def load_ron_nominal() -> pd.DataFrame:
             "descartan silenciosamente."
         )
     df["provincia"] = df["provincia"].map(PROVINCIA_CANONICA)
+    return df.rename(columns={"ano": "anio"})[["provincia", "anio", "impuesto", "monto"]]
 
-    nominal = df.groupby(["provincia", "ano"], as_index=False)["monto"].sum()
-    nominal = nominal.rename(columns={"ano": "anio", "monto": "monto_nominal"})
+
+def load_ron_nominal() -> pd.DataFrame:
+    df = load_ron_por_concepto()
+    nominal = df.groupby(["provincia", "anio"], as_index=False)["monto"].sum()
+    nominal = nominal.rename(columns={"monto": "monto_nominal"})
 
     provincias_esperadas = set(PROVINCIA_CANONICA.values())
     anios_esperados = set(range(SCOPE_START_YEAR, SCOPE_END_YEAR + 1))

@@ -11,17 +11,26 @@ Córdoba. Se leen tres filas por su código:
   - `1.1`   Recursos de Origen Provincial (recaudación propia).
   - `1.2.1` Coparticipación Federal de Impuestos: Ley 23.548 + compensación del
             Consenso Fiscal (Ley 27.429) + bono Consenso Fiscal.
+  - `1.2.3` Fondo para Obras de Infraestructura y Programas Sociales (Ley 27.429, punto
+            I.c del Consenso Fiscal). Hasta 2017 era la asignación específica de
+            Ganancias; desde 2018 Nación la transfiere como coparticipación Ley 23.548 y
+            la provincia la sigue registrando en esta fila aparte.
+  - `1.2.5.1` Ley 26.075 - Financiamiento Educativo: la parte de la coparticipación que
+            esa ley afecta a educación.
 
-RATIO (`ratio_coparticipacion_ingresos`) = fila 1.2.1 / fila 1: numerador y denominador
-del mismo archivo, así el numerador es efectivamente parte del denominador. Da igual en
-pesos nominales o reales (el deflactor se cancela).
+La coparticipación es 1.2.1 + 1.2.3 + 1.2.5.1, la misma definición que el Núcleo 1 (ver
+process_coparticipacion.py). Usando solo 1.2.1 quedaría afuera más de una cuarta parte de
+lo que Nación transfiere por la Ley 23.548, y una caída de la recaudación coparticipable
+también se la llevaría.
+
+RATIO (`ratio_coparticipacion_ingresos`) = (1.2.1 + 1.2.3 + 1.2.5.1) / fila 1: numerador y
+denominador del mismo archivo, así el numerador es efectivamente parte del denominador. Da
+igual en pesos nominales o reales (el deflactor se cancela).
 
 CONTROL CONTRA LA SERIE NACIONAL: `coparticipacion_ron_pesos` es la coparticipación de
 Córdoba según la serie RON de Hacienda (Núcleo 1) y `diferencia_ron_vs_provincia` su
-diferencia relativa contra la fila 1.2.1. Coinciden en 2015-2017; desde 2018 la serie
-nacional es entre 14% y 17% más alta. No identifiqué la causa (podría ser criterio de
-registro o retenciones previas a la transferencia), así que no se usa para el ratio y se
-deja visible como control.
+diferencia relativa contra el archivo provincial. Las dos fuentes son independientes y
+coinciden todos los años 2015-2025 (diferencia menor a 2%).
 
 COLUMNAS REALES (`*_real_base2016_pesos`): pesos constantes, base promedio 2016 = 100,
 mismo IPC empalmado que el Núcleo 1 (`load_ipc_empalmado`):
@@ -75,10 +84,14 @@ def _parse_fecha_columna(valor):
     return 2000 + int(anio_str), MESES[mes_str]
 
 
+# Cada columna de salida es la suma de las filas con esos códigos.
 FILAS_DGR = {
-    "ingresos_totales_pesos": "1",
-    "recursos_propios_pesos": "1.1",
-    "coparticipacion_pesos": "1.2.1",
+    "ingresos_totales_pesos": ["1"],
+    "recursos_propios_pesos": ["1.1"],
+    "coparticipacion_pesos": ["1.2.1", "1.2.3", "1.2.5.1"],
+    # Compensación y bono del Consenso Fiscal (incluidos en 1.2.1): montos fijos que no
+    # siguen los coeficientes, así que el simulador no los mueve con la recaudación.
+    "compensacion_consenso_fiscal_pesos": ["1.2.1.2", "1.2.1.3"],
 }
 
 
@@ -92,29 +105,30 @@ def load_series_dgr_anuales() -> pd.DataFrame:
 
     series = {}
     meses_por_anio = {}
-    for columna_salida, codigo in FILAS_DGR.items():
-        filas = codigos[codigos == codigo].index
-        if len(filas) != 1:
-            raise SystemExit(
-                f"Se esperaba una única fila con código {codigo} en Serie_Mensual, se "
-                f"encontraron {len(filas)}. Revisar manualmente el archivo."
-            )
-        fila = int(filas[0])
-
+    for columna_salida, codigos_fila in FILAS_DGR.items():
         montos = {}
-        meses = {}
-        for c in columnas_datos:
-            fecha_cruda = raw.iat[fila_fechas, c]
-            if pd.isna(fecha_cruda):
-                continue
-            anio, _mes = _parse_fecha_columna(fecha_cruda)
-            monto = raw.iat[fila, c]
-            if pd.isna(monto):
-                monto = 0.0
-            montos[anio] = montos.get(anio, 0.0) + float(monto)
-            meses[anio] = meses.get(anio, 0) + 1
+        for codigo in codigos_fila:
+            filas = codigos[codigos == codigo].index
+            if len(filas) != 1:
+                raise SystemExit(
+                    f"Se esperaba una única fila con código {codigo} en Serie_Mensual, se "
+                    f"encontraron {len(filas)}. Revisar manualmente el archivo."
+                )
+            fila = int(filas[0])
+
+            meses = {}
+            for c in columnas_datos:
+                fecha_cruda = raw.iat[fila_fechas, c]
+                if pd.isna(fecha_cruda):
+                    continue
+                anio, _mes = _parse_fecha_columna(fecha_cruda)
+                monto = raw.iat[fila, c]
+                if pd.isna(monto):
+                    monto = 0.0
+                montos[anio] = montos.get(anio, 0.0) + float(monto)
+                meses[anio] = meses.get(anio, 0) + 1
+            meses_por_anio = meses
         series[columna_salida] = montos
-        meses_por_anio = meses
 
     anios_incompletos = sorted(a for a, m in meses_por_anio.items() if m < 12)
     if anios_incompletos:
@@ -167,14 +181,16 @@ def base_calibrada_cordoba(anio_referencia: int) -> tuple[float, float, float]:
 
     La masa se calibra para que el coeficiente de Córdoba aplicado sobre ella reproduzca
     exactamente la coparticipación que registra el archivo provincial en
-    `anio_referencia`. Así, el impacto en pesos que devuelve `simular_shock` y el
+    `anio_referencia`, sin la compensación del Consenso Fiscal (monto fijo que no sigue
+    los coeficientes). Así, el impacto en pesos que devuelve `simular_shock` y el
     denominador (ingresos totales) salen de la misma fuente.
     """
     ratio_df = build_ratio()
     fila = ratio_df.loc[ratio_df["anio"] == anio_referencia].iloc[0]
     coparticipacion = float(fila["coparticipacion_pesos"])
     ingresos_totales = float(fila["ingresos_totales_pesos"])
-    recaudacion_base = coparticipacion / COEFICIENTES_COPARTICIPACION["Córdoba"]
+    proporcional = coparticipacion - float(fila["compensacion_consenso_fiscal_pesos"])
+    recaudacion_base = proporcional / COEFICIENTES_COPARTICIPACION["Córdoba"]
     return recaudacion_base, coparticipacion, ingresos_totales
 
 
