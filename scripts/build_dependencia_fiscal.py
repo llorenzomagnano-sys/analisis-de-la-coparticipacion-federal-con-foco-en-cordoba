@@ -121,10 +121,13 @@ def load_series_dgr_anuales() -> pd.DataFrame:
                 fecha_cruda = raw.iat[fila_fechas, c]
                 if pd.isna(fecha_cruda):
                     continue
-                anio, _mes = _parse_fecha_columna(fecha_cruda)
+                anio, mes = _parse_fecha_columna(fecha_cruda)
                 monto = raw.iat[fila, c]
                 if pd.isna(monto):
-                    monto = 0.0
+                    raise SystemExit(
+                        f"Falta el dato de la fila {codigo} para {mes:02d}/{anio} en Serie_Mensual; "
+                        "no se completa con supuestos. Revisar el archivo."
+                    )
                 montos[anio] = montos.get(anio, 0.0) + float(monto)
                 meses[anio] = meses.get(anio, 0) + 1
             meses_por_anio = meses

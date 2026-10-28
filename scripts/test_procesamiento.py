@@ -3,12 +3,17 @@
 Leen los datos versionados en data/raw/ y data/processed/. Correr con:
     pytest scripts/test_procesamiento.py
 """
+import re
+from pathlib import Path
+
 import pandas as pd
 import pytest
 
 from build_coefficients_comparison import OUTPUT_PATH as APORTE_PATH
 from build_comparativo_provincias import build_comparativo
-from build_dependencia_fiscal import build_ratio, calcular_sensibilidad
+from build_dependencia_fiscal import base_calibrada_cordoba, build_ratio, calcular_sensibilidad
+from calibracion_iaraf import calibrar
+from coeficientes_ley23548 import COEFICIENTES_COPARTICIPACION
 from process_coparticipacion import (
     CONCEPTO_GANANCIAS_PRE_2018,
     OUTPUT_PATH as COPART_PATH,
@@ -98,3 +103,28 @@ def test_sensibilidad_es_el_shock_por_la_parte_proporcional_de_la_dependencia(de
     proporcional = fila["coparticipacion_pesos"] - fila["compensacion_consenso_fiscal_pesos"]
     esperado = -0.10 * proporcional / fila["ingresos_totales_pesos"]
     assert sens["impacto_pct_ingresos_totales_cordoba"] == pytest.approx(esperado)
+
+
+def test_calibracion_lleva_la_base_a_precios_del_cuatrimestre():
+    calibracion = calibrar()
+    assert calibracion["ajuste_precios"] > 1
+    assert -0.20 < calibracion["variacion_implicita"] < 0
+
+
+def test_simulador_web_usa_los_datos_del_repositorio():
+    # El HTML tiene las constantes escritas a mano: si cambian los datos, este test avisa.
+    html = (Path(__file__).resolve().parent.parent / "docs" / "simulador" / "index.html").read_text(encoding="utf-8")
+
+    def constante(nombre):
+        return float(re.search(rf"var {nombre} = ([0-9.]+);", html).group(1))
+
+    _base, coparticipacion, ingresos = base_calibrada_cordoba(2025)
+    fila = build_ratio().set_index("anio").loc[2025]
+    proporcional = coparticipacion - fila["compensacion_consenso_fiscal_pesos"]
+    assert constante("COPARTICIPACION_PROPORCIONAL_CORDOBA_2025") == pytest.approx(proporcional, rel=1e-9)
+    assert constante("INGRESOS_TOTALES_CORDOBA_2025") == pytest.approx(ingresos, rel=1e-9)
+    assert constante("COEF_CORDOBA") == pytest.approx(COEFICIENTES_COPARTICIPACION["Córdoba"])
+
+    escenario = f"{calibrar()['variacion_implicita'] * 100:.1f}"
+    assert f'value="{escenario}"' in html
+    assert f'slider.value = "{escenario}"' in html

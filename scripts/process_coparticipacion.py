@@ -50,7 +50,7 @@ más, solo hasta 2017,
 Entradas:
   - data/raw/coparticipacion/serie_ron_2003_2025.csv
   - data/raw/ipc/serie_ipc_divisiones.csv
-  - data/raw/ipc/fundacion_norte_y_sur_orlando_ferreres.xlsx
+  - data/raw/ipc/ferreres_variaciones_usadas.csv
 
 Salida:
   - data/processed/coparticipacion_real.csv
@@ -63,18 +63,17 @@ import pandas as pd
 BASE_DIR = Path(__file__).resolve().parent.parent
 RON_PATH = BASE_DIR / "data" / "raw" / "coparticipacion" / "serie_ron_2003_2025.csv"
 IPC_PATH = BASE_DIR / "data" / "raw" / "ipc" / "serie_ipc_divisiones.csv"
-IPC_FERRERES_PATH = BASE_DIR / "data" / "raw" / "ipc" / "fundacion_norte_y_sur_orlando_ferreres.xlsx"
+IPC_FERRERES_PATH = BASE_DIR / "data" / "raw" / "ipc" / "ferreres_variaciones_usadas.csv"
 OUTPUT_PATH = BASE_DIR / "data" / "processed" / "coparticipacion_real.csv"
 
 SCOPE_START_YEAR = 2003
 SCOPE_END_YEAR = 2025
 BASE_YEAR = 2016  # serie real en pesos constantes, base = promedio del año 2016
 
-# Hoja del archivo Ferreres que contiene las tasas de variación anual (var. %
-# anual) usadas para el empalme. Se leen directamente tal como están en la
-# fuente (no se recalculan a partir de los niveles, para no introducir
-# redondeos distintos a los de la fuente).
-IPC_FERRERES_SHEET = "IPC "
+# Del archivo de Fundación Norte y Sur / Ferreres solo se versionan las tasas de
+# variación % anual (del promedio) que usa el empalme, transcriptas tal como figuran en la
+# fuente (no se recalculan a partir de los niveles, para no introducir redondeos
+# distintos a los de la fuente). Ver data/raw/ipc/_metadata.json.
 
 # Años cuya variación % anual se toma de cada tabla del archivo Ferreres:
 #   - tabla A ("GBA (INDEC)"): tramo 2004-2006, pre-intervención, confiable.
@@ -206,7 +205,8 @@ def load_ron_nominal() -> pd.DataFrame:
     return nominal
 
 
-def load_ipc_promedio_anual() -> pd.DataFrame:
+def load_ipc_nacional_mensual() -> pd.DataFrame:
+    """IPC oficial nacional, nivel general, mensual (columnas: Periodo AAAAMM, Indice_IPC)."""
     df = pd.read_csv(IPC_PATH, sep=";", encoding="latin-1")
     df.columns = [c.strip() for c in df.columns]
 
@@ -214,16 +214,21 @@ def load_ipc_promedio_anual() -> pd.DataFrame:
         (df["Region"].str.strip().str.lower() == "nacional")
         & (df["Descripcion"].str.strip().str.lower() == "nivel general")
     ].copy()
-    nivel_general["Indice_IPC"] = (
-        nivel_general["Indice_IPC"].astype(str).str.replace(",", ".", regex=False).astype(float)
-    )
     if nivel_general.empty:
         raise SystemExit(
             "No se encontraron filas con Region='Nacional' y Descripcion='NIVEL GENERAL' "
             f"en {IPC_PATH}. Revisar manualmente los valores reales de esas columnas."
         )
+    nivel_general["Indice_IPC"] = (
+        nivel_general["Indice_IPC"].astype(str).str.replace(",", ".", regex=False).astype(float)
+    )
+    nivel_general["Periodo"] = nivel_general["Periodo"].astype(int)
+    return nivel_general[["Periodo", "Indice_IPC"]].reset_index(drop=True)
 
-    nivel_general["anio"] = nivel_general["Periodo"].astype(str).str[:4].astype(int)
+
+def load_ipc_promedio_anual() -> pd.DataFrame:
+    nivel_general = load_ipc_nacional_mensual()
+    nivel_general["anio"] = nivel_general["Periodo"] // 100
     nivel_general = nivel_general[
         (nivel_general["anio"] >= SCOPE_START_YEAR) & (nivel_general["anio"] <= SCOPE_END_YEAR)
     ]
@@ -241,46 +246,12 @@ def load_ipc_promedio_anual() -> pd.DataFrame:
     return promedio
 
 
-def _parse_anio_ferreres(valor) -> int | None:
-    """Convierte 'Año' de la hoja Ferreres a int, tolerando el asterisco usado
-    en algunas filas (p. ej. '2015*') para marcar años ajustados por la fuente."""
-    if valor is None:
-        return None
-    texto = str(valor).strip().rstrip("*")
-    try:
-        return int(float(texto))
-    except ValueError:
-        return None
-
-
 def load_ipc_ferreres_var_pct() -> tuple[dict, dict]:
-    """Lee la hoja "IPC " del archivo Ferreres y devuelve (var_tabla_a,
-    var_tabla_b): año -> variación % anual, una por cada una de las dos tablas
-    anuales de esa hoja (columna A = Año, columna C = var. % anual del
-    promedio)."""
-    raw = pd.read_excel(IPC_FERRERES_PATH, sheet_name=IPC_FERRERES_SHEET, header=None)
-
-    filas_tabla_a = raw[raw[1].astype(str).str.contains("GBA \\(INDEC\\)", na=False)].index
-    filas_tabla_b = raw[raw[1].astype(str).str.contains("estimaciones privadas", na=False)].index
-    if len(filas_tabla_a) != 1 or len(filas_tabla_b) != 1:
-        raise SystemExit(
-            "No se encontraron (o se encontró más de una vez) los encabezados "
-            "'GBA (INDEC)' / 'estimaciones privadas' en la hoja "
-            f"'{IPC_FERRERES_SHEET}' de {IPC_FERRERES_PATH}. Revisar manualmente."
-        )
-    inicio_a, inicio_b = int(filas_tabla_a[0]), int(filas_tabla_b[0])
-
-    def parse_tabla(fila_inicio: int, fila_fin: int) -> dict:
-        var_por_anio = {}
-        for i in range(fila_inicio, fila_fin):
-            anio = _parse_anio_ferreres(raw.iat[i, 0])
-            var = raw.iat[i, 2]
-            if anio is not None and isinstance(var, (int, float)):
-                var_por_anio[anio] = float(var)
-        return var_por_anio
-
-    var_tabla_a = parse_tabla(inicio_a + 2, inicio_b)
-    var_tabla_b = parse_tabla(inicio_b + 2, len(raw))
+    """Devuelve (var_tabla_a, var_tabla_b): año -> variación % anual del promedio, de las
+    tablas "GBA (INDEC)" (A) y "GBA (estimaciones privadas)" (B) del archivo Ferreres."""
+    df = pd.read_csv(IPC_FERRERES_PATH)
+    var_tabla_a = dict(zip(df.loc[df["tabla"] == "A", "anio"], df.loc[df["tabla"] == "A", "variacion_anual_promedio"]))
+    var_tabla_b = dict(zip(df.loc[df["tabla"] == "B", "anio"], df.loc[df["tabla"] == "B", "variacion_anual_promedio"]))
     return var_tabla_a, var_tabla_b
 
 

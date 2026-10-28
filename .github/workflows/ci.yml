@@ -26,3 +26,8 @@ jobs:
 
       - name: Correr el pipeline completo (run_all.py)
         run: python run_all.py
+
+      - name: Verificar que los datos procesados versionados son los que genera el pipeline
+        run: |
+          git status --porcelain -- data/processed/
+          test -z "$(git status --porcelain -- data/processed/)"
