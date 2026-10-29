@@ -1,0 +1,21 @@
+{
+  "organismo": "INDEC, Censo Nacional de Población, Hogares y Viviendas 2022",
+  "descripcion": "Población por jurisdicción, resultados definitivos (publicados en noviembre de 2023)",
+  "obtenido_por": "descarga directa desde el sitio de INDEC",
+  "url_pagina": "https://www.indec.gob.ar/indec/web/Nivel4-Tema-2-41-165",
+  "fecha_incorporacion_al_repo": "2026-10-29",
+  "archivos": [
+    {
+      "archivo": "c2022_tp_est_c1.xlsx",
+      "url_origen": "https://www.indec.gob.ar/ftp/cuadros/poblacion/c2022_tp_est_c1.xlsx",
+      "sha256": "b900f4bfd517d228882b834bbb571a16b05b83c378724f944e26b73af2eabfed",
+      "hoja_usada": "Cuadro 1 ",
+      "descripcion": "Cuadro 1. Total del país. Total de población, variación absoluta y variación relativa, por jurisdicción. Años 2010 y 2022.",
+      "cobertura": "Censos 2010 y 2022; se usa solo la columna 2022",
+      "jurisdicciones": "23 provincias + CABA + fila 'Total' + dos subtotales de Buenos Aires sin código (24 partidos del GBA y resto), que se descartan",
+      "usado_en_nucleo_5": true,
+      "uso": "denominador de la coparticipación 2022 por habitante",
+      "nota": "El nombre de la hoja termina con un espacio ('Cuadro 1 '), tal cual viene de INDEC. Total del país 2022: 45.892.285 personas."
+    }
+  ]
+}

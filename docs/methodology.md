@@ -100,7 +100,11 @@ Notebook: `notebooks/03_simulador_sensibilidad.ipynb`.
 
 ### Supuestos y limitaciones
 
-Para tener un escenario de referencia usé una cifra pública de comienzos de 2026: la caída de recaudación del primer cuatrimestre que reportó IARAF ($5,1 billones de caída total, $1,4 billones menos de coparticipación). No encontré una cifra oficial de masa coparticipable para ese período, así que la estimo en `scripts/calibracion_iaraf.py`: tomo la coparticipación nominal 2025 del Núcleo 1 sin la compensación del Consenso Fiscal, la divido por 3 (un cuatrimestre), la llevo a precios de enero-abril de 2026 con el IPC nacional (+21,5% contra el promedio de 2025) y la divido por la suma de los 24 coeficientes, 0,5876, para llegar a la masa total. Después calculo qué variación % reproduce exactamente los $1,4 billones: −6,3%.
+Para tener un escenario de referencia usé una cifra pública de comienzos de 2026: la caída de recaudación del primer cuatrimestre que reportó IARAF ($5,1 billones de caída total, $1,4 billones menos de coparticipación).
+
+La caída total está en el [informe de IARAF del 5 de mayo de 2026](https://www.iaraf.org/index.php/13-areas-de-estudio/area-fiscal/723-informe-economico-2026-05-05): −6,7% real interanual en el primer cuatrimestre, una merma de unos $5,1 billones. Los $1,4 billones de menor coparticipación no figuran en ese resumen; según la prensa están en el informe completo, que IARAF publica en Google Drive y no pude abrir. No es la única cifra que circuló: Ámbito publicó el mismo día una pérdida de casi $1,3 billones para las provincias, a partir de datos que difundió el diputado Guillermo Michel ([nota](https://www.ambito.com/economia/provincias-presion-ya-perdieron-13-billones-coparticipacion-lo-que-va-2026-n6274308)), y el propio IARAF estimó que las transferencias automáticas cayeron un 5,7% real en enero-abril ([informe del 30 de abril de 2026](https://www.iaraf.org/index.php/informes-economicos/area-fiscal/722-informe-economico-2026-04-30)). Mantengo $1,4 billones como escenario de referencia. Como el modelo es lineal, con $1,3 billones la variación implícita sería −5,9% y el impacto sobre Córdoba de unos $111.500 millones en vez de $120.100 millones.
+
+No encontré una cifra oficial de masa coparticipable para ese período, así que la estimo en `scripts/calibracion_iaraf.py`: tomo la coparticipación nominal 2025 del Núcleo 1 sin la compensación del Consenso Fiscal, la divido por 3 (un cuatrimestre), la llevo a precios de enero-abril de 2026 con el IPC nacional (+21,5% contra el promedio de 2025) y la divido por la suma de los 24 coeficientes, 0,5876, para llegar a la masa total. Después calculo qué variación % reproduce exactamente los $1,4 billones: −6,3%.
 
 El ajuste de precios lo agregué en una revisión posterior. Antes la masa quedaba en pesos promedio de 2025 contra un impacto medido en pesos de 2026, y la variación implícita salía en −7,7%, sobreestimada en esa misma proporción.
 
@@ -141,21 +145,22 @@ Y, como en el Núcleo 3, el indicador de sensibilidad es una simplificación de 
 
 ## Núcleo 5 — Las 24 jurisdicciones comparadas
 
-No tiene fuentes propias: usa la serie del Núcleo 1 (con el detalle por concepto de `load_ron_por_concepto`) y los coeficientes del Núcleo 2.
+Usa la serie del Núcleo 1 (con el detalle por concepto de `load_ron_por_concepto`), los coeficientes del Núcleo 2 y una fuente propia: la población por jurisdicción del Censo 2022 de INDEC, resultados definitivos (`data/raw/poblacion/c2022_tp_est_c1.xlsx`, descargado de <https://www.indec.gob.ar/ftp/cuadros/poblacion/c2022_tp_est_c1.xlsx>). El cuadro trae dos subtotales de Buenos Aires sin código de jurisdicción (24 partidos del GBA y resto) que se descartan; el script controla que las 24 jurisdicciones sumen el total del país, 45.892.285 personas.
 
 ### Metodología
 
-Tres comparaciones entre las 23 provincias y CABA:
+Cuatro comparaciones entre las 23 provincias y CABA:
 
 - **Crecimiento real 2003-2025**: coparticipación real 2025 / real 2003, por jurisdicción.
 - **Participación en el reparto, año por año**: lo que recibió cada una sobre el total de las 24 (en montos nominales; el deflactor es común y se cancela), medido como diferencia en puntos porcentuales contra su propia participación de 2003 para poder mostrar en un mismo eje a Buenos Aires (más de 20%) y a Tierra del Fuego (poco más de 1%).
 - **Participación 2025 contra el coeficiente legal** renormalizado entre las 24 (la misma base del Núcleo 2), con y sin la compensación del Consenso Fiscal.
+- **Por habitante**: coparticipación 2022 dividida por la población del Censo 2022, llevada a pesos de 2025 con el mismo IPC del Núcleo 1 (`nominal_2022 × ipc_2025 / ipc_2022`), y un índice contra el promedio de las 24 ponderado por población (promedio = 1). El índice es igual a la participación de 2022 en el reparto dividida por la participación en la población; hay un test que lo controla.
 
 Script: `scripts/build_comparativo_provincias.py`. Notebook: `notebooks/05_comparacion_provincias.ipynb`.
 
 ### Supuestos y limitaciones
 
-La comparación es en montos totales, no por habitante: el repositorio no tiene datos de población por provincia. Para comparar por habitante haría falta incorporar la población del Censo 2022 y las proyecciones de INDEC.
+La comparación por habitante es solo de 2022. Usé la coparticipación de ese año y no la de 2025 porque dividir montos de 2025 por la población de 2022 mezclaría años, y no tengo en el repositorio proyecciones oficiales de población por provincia basadas en el Censo 2022. El censo es del 18 de mayo de 2022 y la coparticipación es la suma del año, una diferencia de meses que no cambia el orden de las jurisdicciones. El resultado (cuanto menos población, más coparticipación por habitante) refleja el diseño de los coeficientes, que son fijos y no dependen de la población; no lo interpreto como una medida de necesidad ni de eficiencia del gasto.
 
 Los movimientos de la participación los asocio a cambios de reglas conocidos (Fondo del Conurbano congelado hasta 2017, Decreto 194/2016 y Ley 27.606 para CABA, fallos de la Corte Suprema de noviembre de 2015 sobre la detracción del 15% para la ANSES). La serie muestra los movimientos y su momento coincide con esas normas, pero no reconstruyo cada norma por separado: es una lectura de los datos, no una descomposición contable.
 

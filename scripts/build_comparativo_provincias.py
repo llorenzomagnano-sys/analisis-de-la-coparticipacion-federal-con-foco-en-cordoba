@@ -18,9 +18,13 @@ para cada provincia y CABA:
   - `peso_compensacion_2025`: qué parte de lo que recibió cada jurisdicción en 2025 fue
     esa compensación.
   - `caida_real_desde_maximo`: coparticipación real 2025 contra el máximo de la serie.
-
-La comparación es en montos totales, no per cápita: el repositorio no tiene datos de
-población por provincia (ver docs/methodology.md).
+  - `poblacion_2022`: población del Censo 2022 (INDEC, resultados definitivos).
+  - `per_capita_2022_pesos_2025`: coparticipación 2022 por habitante, llevada a pesos de
+    2025 con el IPC. Se mide en 2022 porque es el año del censo: dividir montos de 2025
+    por población de 2022 mezclaría años, y no hay proyecciones oficiales por provincia
+    basadas en el Censo 2022 en el repositorio.
+  - `indice_per_capita_2022`: lo mismo relativo al promedio de las 24 jurisdicciones
+    (promedio = 1). Es igual a participación 2022 / participación en la población.
 
 Salida: data/processed/comparativo_provincias.csv
 """
@@ -35,11 +39,40 @@ from coeficientes_ley23548 import COEFICIENTES_COPARTICIPACION  # noqa: E402
 from process_coparticipacion import load_ron_por_concepto  # noqa: E402
 
 COPART_PATH = BASE_DIR / "data" / "processed" / "coparticipacion_real.csv"
+POBLACION_PATH = BASE_DIR / "data" / "raw" / "poblacion" / "c2022_tp_est_c1.xlsx"
 OUTPUT_PATH = BASE_DIR / "data" / "processed" / "comparativo_provincias.csv"
 
 ANIO_INICIAL = 2003
 ANIO_FINAL = 2025
+ANIO_CENSO = 2022
 CONCEPTO_COMPENSACION = "consenso fiscal ley 27429 compensacion"
+
+# Nombres del cuadro de INDEC que no coinciden con los del resto del repositorio.
+NOMBRES_INDEC = {
+    "Ciudad Autónoma de Buenos Aires": "CABA",
+    "Tierra del Fuego, Antártida e Islas del Atlántico Sur (1)": "Tierra del Fuego",
+}
+
+
+def load_poblacion_censo_2022() -> pd.Series:
+    """Población 2022 por jurisdicción, del Cuadro 1 del Censo 2022 (INDEC).
+
+    El cuadro intercala dos subtotales de Buenos Aires (24 partidos del GBA y resto) sin
+    código de jurisdicción; se descartan. Se controla que las 24 sumen el total del país.
+    """
+    cuadro = pd.read_excel(POBLACION_PATH, sheet_name="Cuadro 1 ", header=None)
+    cuadro = cuadro.iloc[:, [0, 1, 3]]
+    cuadro.columns = ["codigo", "jurisdiccion", "poblacion"]
+    total = cuadro.loc[cuadro["jurisdiccion"] == "Total", "poblacion"]
+    con_codigo = cuadro["codigo"].astype(str).str.strip().str.fullmatch(r"\d+")
+    filas = cuadro[con_codigo & cuadro["poblacion"].notna()]
+    poblacion = (
+        filas.assign(provincia=filas["jurisdiccion"].replace(NOMBRES_INDEC))
+        .set_index("provincia")["poblacion"].astype(int)
+    )
+    if len(total) != 1 or len(poblacion) != 24 or poblacion.sum() != int(total.iloc[0]):
+        raise SystemExit("El cuadro de población del Censo 2022 no tiene la estructura esperada.")
+    return poblacion
 
 
 def participaciones_anuales() -> pd.DataFrame:
@@ -95,6 +128,18 @@ def build_comparativo() -> pd.DataFrame:
         montos_final["sin_compensacion"] / montos_final["sin_compensacion"].sum()
     )
     tabla["peso_compensacion_2025"] = montos_final["compensacion"] / montos_final["total"]
+
+    poblacion = load_poblacion_censo_2022()
+    if set(poblacion.index) != set(real.columns):
+        raise SystemExit("Las jurisdicciones del Censo 2022 y de la serie no coinciden.")
+    nominal = df.pivot(index="anio", columns="provincia", values="monto_nominal")
+    ipc = df.groupby("anio")["ipc_promedio_anual"].first()
+    censo_pesos_final = nominal.loc[ANIO_CENSO] * 1e6 * ipc.loc[ANIO_FINAL] / ipc.loc[ANIO_CENSO]
+    tabla["poblacion_2022"] = poblacion
+    tabla["per_capita_2022_pesos_2025"] = censo_pesos_final / poblacion
+    tabla["indice_per_capita_2022"] = tabla["per_capita_2022_pesos_2025"] / (
+        censo_pesos_final.sum() / poblacion.sum()
+    )
     tabla.index.name = "provincia"
     return tabla.sort_values("multiplicador_real_2003_2025").reset_index()
 
