@@ -33,6 +33,7 @@ PASOS_PROCESAMIENTO = [
     ("Núcleo 2 — comparar aporte (PBG) vs. recibo (coparticipación)", "build_coefficients_comparison.py"),
     ("Núcleo 2 — retenciones atribuibles a Córdoba", "build_retenciones_cordoba.py"),
     ("Núcleo 4 — ratio de dependencia fiscal de Córdoba", "build_dependencia_fiscal.py"),
+    ("Núcleo 4 — dependencia de las 24 jurisdicciones", "build_dependencia_provincias.py"),
     ("Núcleo 5 — comparación entre las 24 jurisdicciones", "build_comparativo_provincias.py"),
 ]
 
