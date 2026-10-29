@@ -34,20 +34,6 @@ La coparticipación aparece todo el tiempo en la agenda económica, con gobernad
 - **Pronósticos.** El simulador calcula qué pasaría ante una caída de la recaudación, pero no predice cuánto va a caer.
 - **Cómo gasta cada provincia,** y qué pasaba antes de 2003, porque no hay datos de montos por provincia para esos años.
 
-### Conceptos para leer el trabajo
-
-| Término | Qué quiere decir acá |
-|---|---|
-| **Masa coparticipable** | Lo que recaudan los impuestos nacionales que se reparten. De eso, las 24 jurisdicciones reciben alrededor del 59%. El resto queda en Nación y en el fondo de ATN. |
-| **Coeficiente** | El porcentaje fijo de la masa que le toca a cada jurisdicción. El de Córdoba es 5,04% de la masa total, que equivale al 8,58% de lo que se reparte entre las 24. Está prácticamente igual desde 1988. |
-| **Transferencias automáticas / no automáticas** | Las automáticas llegan solas, por ley y con coeficientes. Las no automáticas (o discrecionales) dependen de una decisión de Nación en cada caso. |
-| **Pesos de 2025** (o "reales") | Los montos de cada año, ajustados por inflación con el IPC: lo que haría falta en 2025 para comprar lo mismo que se compraba con esa plata entonces. Permite comparar años distintos. |
-| **Por habitante** | El monto dividido por la población del año, estimada entre los censos 2001, 2010 y 2022. |
-| **PBG** | Producto Bruto Geográfico: el tamaño de la economía de cada provincia. Se usa como aproximación de lo que cada una aporta. |
-| **pp** | Puntos porcentuales: la diferencia entre dos porcentajes (de 8,5% a 9,0% son +0,5 pp). |
-| **Retenciones** | Impuestos a las exportaciones. Van enteras a Nación: no se coparticipan. |
-| **Consenso Fiscal** | Acuerdo entre Nación y las provincias de 2017 (Ley 27.429), que cambió varias reglas del reparto desde 2018. |
-
 ## Principales hallazgos
 
 - **Córdoba recibe hoy lo mismo que hace diez años.** En pesos de 2025, su coparticipación llegó a un máximo de $5,42 billones en 2022 y cerró 2025 en $4,74 billones, más o menos el nivel de 2016. Desde 2004 se multiplicó por 2,1, y por habitante por 1,6. Contra 2003 el múltiplo es 3,1, pero exagera: 2003 es el piso de la crisis de 2001-2002 y solo en 2004 la serie subió 50%. Por habitante, el máximo fue en 2018 y 2025 está 17% por debajo.
