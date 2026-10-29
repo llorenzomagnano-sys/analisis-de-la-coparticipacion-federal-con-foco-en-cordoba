@@ -6,8 +6,8 @@ para tener una demo visual en el README sin depender de que alguien corra el not
 Diseño (siguiendo la skill de dataviz del proyecto): un "stat tile" animado, no una
 sola barra a pantalla completa -- el número es el protagonista, con un meter fino como
 contexto secundario de dónde cae el shock dentro de un rango fijo. Muestra el impacto
-en dos unidades: pesos (delta absoluto) y % de los ingresos corrientes totales de
-Córdoba (Núcleo 4) -- la lectura relativa es la que realmente responde "qué tan grave
+en dos unidades: pesos (delta absoluto) y % de la recaudación total de Córdoba
+(Núcleo 4) -- la lectura relativa es la que realmente responde "qué tan grave
 es esto para Córdoba".
 
 No es parte del pipeline de datos (run_all.py no lo llama) -- es un asset de
@@ -64,10 +64,10 @@ def variaciones_interpoladas() -> list[float]:
 
 
 def datos_base() -> tuple[float, float]:
-    """(masa coparticipable calibrada 2025, ingresos totales de Córdoba 2025), misma
+    """(masa coparticipable calibrada 2025, recaudación total de Córdoba 2025), misma
     calibración que el indicador de sensibilidad del Núcleo 4."""
-    recaudacion_base, _copart, ingresos_2025 = base_calibrada_cordoba(2025)
-    return recaudacion_base, ingresos_2025
+    recaudacion_base, _copart, recaudacion_total_2025 = base_calibrada_cordoba(2025)
+    return recaudacion_base, recaudacion_total_2025
 
 
 def _ar(texto: str) -> str:
@@ -75,12 +75,12 @@ def _ar(texto: str) -> str:
     return texto.replace(",", "§").replace(".", ",").replace("§", ".")
 
 
-def render_frame(variacion_pct: float, recaudacion_base: float, ingresos_totales: float) -> Image.Image:
+def render_frame(variacion_pct: float, recaudacion_base: float, recaudacion_total: float) -> Image.Image:
     variacion = variacion_pct / 100
     resultado = simular_shock(variacion, recaudacion_base, COEFICIENTES_COPARTICIPACION)
     cordoba = next(p for p in resultado["por_provincia"] if p["provincia"] == "Córdoba")
     impacto_pesos = cordoba["impacto_pesos"]
-    impacto_pct_ingresos = impacto_pesos / ingresos_totales
+    impacto_pct_recaudacion = impacto_pesos / recaudacion_total
     color = COLOR_NEGATIVO if impacto_pesos < 0 else COLOR_POSITIVO
 
     fig = plt.figure(figsize=(7.2, 4), dpi=130)
@@ -104,11 +104,11 @@ def render_frame(variacion_pct: float, recaudacion_base: float, ingresos_totales
     # Stat tile: el número grande es el impacto relativo (la pregunta que importa:
     # "qué tan grave es esto para Córdoba"), con el delta en pesos como contexto.
     ax.text(
-        0.07, 0.58, _ar(f"{impacto_pct_ingresos:+.2%}"), fontsize=44, color=color,
+        0.07, 0.58, _ar(f"{impacto_pct_recaudacion:+.2%}"), fontsize=44, color=color,
         fontweight="bold", ha="left", va="center", family="sans-serif",
     )
     ax.text(
-        0.07, 0.40, "de los ingresos totales de Córdoba (2025)",
+        0.07, 0.40, "de la recaudación total de Córdoba (2025)",
         fontsize=10.5, color=INK_SECONDARY, ha="left", va="center",
     )
     ax.text(
@@ -141,9 +141,9 @@ def render_frame(variacion_pct: float, recaudacion_base: float, ingresos_totales
 
 
 def main() -> None:
-    recaudacion_base, ingresos_totales = datos_base()
+    recaudacion_base, recaudacion_total = datos_base()
     variaciones = variaciones_interpoladas()
-    frames = [render_frame(v, recaudacion_base, ingresos_totales) for v in variaciones]
+    frames = [render_frame(v, recaudacion_base, recaudacion_total) for v in variaciones]
 
     OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
     frames[0].save(
