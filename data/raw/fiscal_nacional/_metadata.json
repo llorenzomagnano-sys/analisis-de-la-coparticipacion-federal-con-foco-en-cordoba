@@ -1,0 +1,18 @@
+{
+  "organismo": "Secretaría de Hacienda, Ministerio de Economía (publicado por la Subsecretaría de Programación Macroeconómica en el portal de datos abiertos)",
+  "descripcion": "Recursos tributarios totales y por tributo, valores anuales (base 2001): derechos de exportación",
+  "obtenido_por": "descarga desde la API de series de tiempo de datos.gob.ar",
+  "fecha_incorporacion_al_repo": "2026-10-29",
+  "archivos": [
+    {
+      "archivo": "derechos_exportacion_anual.csv",
+      "url_origen": "https://apis.datos.gob.ar/series/api/series/?ids=142.1_DEREC_2001_A_20&format=csv&limit=1000&header=ids",
+      "id_serie": "142.1_DEREC_2001_A_20",
+      "unidades": "millones de pesos corrientes",
+      "sha256": "eed5602e9c9c82a2889af9d6295fa0864ab368ae8c21b43c85a226390f102359",
+      "cobertura": "1997-2025",
+      "usado_en_nucleo_2": true,
+      "uso": "total de derechos de exportación (retenciones), que no se coparticipan, para estimar la parte atribuible a la producción de Córdoba"
+    }
+  ]
+}

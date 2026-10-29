@@ -11,9 +11,12 @@ import pytest
 
 from build_coefficients_comparison import OUTPUT_PATH as APORTE_PATH
 from build_comparativo_provincias import build_comparativo, participaciones_anuales
+from build_coparticipacion_pib_poblacion import build_agregada, descomponer
 from build_dependencia_fiscal import base_calibrada_cordoba, build_ratio, calcular_sensibilidad
 from calibracion_iaraf import IMPACTO_PROVINCIAS_IARAF, calibrar, contrastar_con_cordoba
+from build_retenciones_cordoba import build_retenciones
 from coeficientes_ley23548 import COEFICIENTES_COPARTICIPACION
+from poblacion import TOTAL_PAIS, load_censos, poblacion_anual
 from process_coparticipacion import (
     CONCEPTO_GANANCIAS_PRE_2018,
     OUTPUT_PATH as COPART_PATH,
@@ -106,6 +109,55 @@ def test_poblacion_y_per_capita_son_consistentes():
     participacion_2022 = participaciones_anuales().loc[2022]
     esperado = participacion_2022 / (tabla["poblacion_2022"] / tabla["poblacion_2022"].sum())
     assert (tabla["indice_per_capita_2022"] - esperado).abs().max() < 1e-9
+
+
+def test_censos_suman_el_total_del_pais_en_los_tres_anios():
+    censos = load_censos()
+    assert len(censos) == 24
+    assert censos.sum().to_dict() == TOTAL_PAIS
+
+
+def test_poblacion_interpolada_queda_entre_censos_y_crece():
+    poblacion = poblacion_anual(range(2003, 2026))
+    censos = load_censos()
+    # 2011 y 2021 caen entre los censos 2010 y 2022 en todas las jurisdicciones.
+    for anio in (2011, 2021):
+        assert ((poblacion.loc[anio] > censos[2010]) & (poblacion.loc[anio] < censos[2022])).all()
+    assert (poblacion.sum(axis=1).diff().dropna() > 0).all()
+
+
+@pytest.fixture(scope="module")
+def agregada():
+    return build_agregada()[0]
+
+
+def test_descomposicion_del_crecimiento_es_una_identidad(agregada):
+    factores = descomponer(agregada, 2004, 2025).iloc[:, 0]
+    producto = (
+        factores["PIB real"] * factores["Deflactor del PIB / IPC"] * factores["Masa Ley 23.548 / PIB"]
+        * factores["Parte de la masa que llega a las 24"]
+    )
+    assert producto == pytest.approx(factores["Coparticipación real (total)"])
+    assert factores["Coparticipación real (total)"] / factores["Población"] == pytest.approx(
+        factores["Coparticipación real por habitante"]
+    )
+
+
+def test_coparticipacion_como_pct_del_pib_es_plausible(agregada):
+    # El PIB del INDEC arranca en 2004; las transferencias de la Ley 23.548 a las
+    # provincias rondan 5%-7% del PIB. Fuera de ese rango, alguna unidad está mal.
+    pct = agregada.set_index("anio")["coparticipacion_pct_pib"]
+    assert pct.loc[2004:].between(4, 8).all()
+    assert pct.loc[:2003].isna().all()
+
+
+def test_retenciones_de_cordoba_usan_participaciones_validas():
+    tabla = build_retenciones()
+    assert tabla["participacion_cordoba_pp_moa"].between(0, 1).all()
+    assert tabla["participacion_cordoba_exportaciones"].between(0, 1).all()
+    # Córdoba pesa más en los rubros agropecuarios que en el total, así que la cota baja
+    # (participación en el total) queda siempre por debajo de la estimación principal.
+    assert (tabla["retenciones_cordoba_cota_baja_millones"] < tabla["retenciones_cordoba_millones"]).all()
 
 
 def test_sensibilidad_es_el_shock_por_la_parte_proporcional_de_la_dependencia(dependencia):

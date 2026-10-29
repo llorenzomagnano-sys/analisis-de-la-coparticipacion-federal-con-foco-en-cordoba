@@ -1,0 +1,18 @@
+{
+  "organismo": "INDEC, Cuentas nacionales (año base 2004)",
+  "descripcion": "Oferta y demanda globales, valores trimestrales y anuales, a precios de 2004 y a precios corrientes",
+  "obtenido_por": "descarga directa desde el sitio de INDEC",
+  "url_pagina": "https://www.indec.gob.ar/indec/web/Nivel4-Tema-3-9-47",
+  "fecha_incorporacion_al_repo": "2026-10-29",
+  "archivos": [
+    {
+      "archivo": "sh_oferta_demanda_09_26.xls",
+      "url_origen": "https://www.indec.gob.ar/ftp/cuadros/economia/sh_oferta_demanda_09_26.xls",
+      "sha256": "fbd4a5b6964cd49a1b5dd48c47b8af5bf3b238c4359503a55167806b8b74e55e",
+      "hojas_usadas": "'cuadro 1' (PIB a precios de 2004) y 'cuadro 8' (PIB a precios corrientes), fila 'Producto Interno Bruto', columnas 'Total' de cada año",
+      "cobertura": "2004 a 2025 completos (2025 provisorio); la serie no tiene 2003",
+      "usado_en_nucleo_1": true,
+      "uso": "coparticipación como % del PIB y descomposición de su crecimiento real (PIB real, deflactor del PIB contra IPC, peso en el PIB)"
+    }
+  ]
+}

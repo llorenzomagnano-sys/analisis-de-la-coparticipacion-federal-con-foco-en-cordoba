@@ -18,6 +18,9 @@ Todos los archivos de `data/raw/` los descargué o los conseguí a mano y los ve
 - **IPC 2016-2025**: INDEC. <https://www.indec.gob.ar/ftp/cuadros/economia/serie_ipc_divisiones.csv>. Archivo: `data/raw/ipc/serie_ipc_divisiones.csv` (mensual, desde dic-2016).
 - **IPC 2003-2015**: Fundación Norte y Sur / Orlando J. Ferreres, conseguida en forma directa (sin URL pública verificada). En el repositorio está solo lo que uso: las 14 tasas de variación anual del empalme, transcriptas de la hoja `IPC ` del archivo original, en `data/raw/ipc/ferreres_variaciones_usadas.csv`. El archivo completo es una compilación de series desde ~1810 y no lo redistribuyo. Es la compilación histórica de series económicas de Argentina que hizo Ferreres para la Fundación Norte y Sur (conocido por *"Dos siglos de Economía Argentina"*) — la uso como insumo de análisis, sin reclamar autoría sobre la compilación.
 
+- **PIB nominal y a precios de 2004**: INDEC, cuentas nacionales (año base 2004), cuadros de oferta y demanda globales. <https://www.indec.gob.ar/ftp/cuadros/economia/sh_oferta_demanda_09_26.xls>. Archivo: `data/raw/pib_nacional/sh_oferta_demanda_09_26.xls`, columnas anuales de 2004 a 2025 (no tiene 2003).
+- **Población por jurisdicción**: INDEC, censos 2001, 2010 y 2022. El Censo 2022 (`data/raw/poblacion/c2022_tp_est_c1.xlsx`) trae también la población 2010; la de 2001 la transcribí del Cuadro 8 del Tomo 1 de resultados definitivos del Censo 2010 (<https://www.indec.gob.ar/ftp/cuadros/poblacion/censo2010_tomo1.pdf>, página 64), en `data/raw/poblacion/censos_2001_2010_cuadro8.csv`. La transcripción suma el total del país en los dos años y su columna 2010 coincide persona por persona con la del Censo 2022; las dos cosas las controla un test.
+
 Incorporé estos datos el 20 de agosto de 2026 (con el rango original acotado a 2016-2025), y amplié a 2003-2025 el 12 de septiembre.
 
 ### Metodología
@@ -49,9 +52,31 @@ Para Córdoba pude contrastar esta serie con una fuente independiente, el archiv
 
 `scripts/process_coparticipacion.py` chequea que existan las 552 combinaciones esperadas (24 jurisdicciones × 23 años) y que haya IPC para cada año antes de deflactar. Hasta ahora no faltó ninguna; si faltara alguna, el script lo avisa y deja ese hueco vacío en vez de completarlo por su cuenta.
 
-También agregué una lectura en términos relativos: además del gráfico en niveles absolutos (donde Buenos Aires domina el gráfico solo por su tamaño), indexé cada provincia a su propio valor de 2003 (=100). Ahí las cuatro provincias de referencia terminan casi iguales (310-314 puntos en 2025). Hay que leer ese nivel con cuidado: 2003 todavía era un año de crisis y solo en 2004 la serie de Córdoba subió un 50% real; contra 2004, la suba hasta 2025 es de 2,1 veces. Para comparar provincias entre sí no cambia nada, porque todas parten del mismo año: el salto de la serie responde a la dinámica agregada del régimen, no a que a Córdoba le haya ido mejor o peor que al resto. En el camino, Buenos Aires se queda atrás entre 2004 y 2017 por el Fondo del Conurbano congelado, y Mendoza en 2016-2018 por la detracción para la ANSES; el Núcleo 5 extiende esta comparación a las 24 jurisdicciones. Sin este gráfico, el de niveles absolutos por sí solo podría sugerir, incorrectamente, que a Buenos Aires "le va mejor" en el régimen, cuando en realidad solo es más grande en nivel.
+Los gráficos del notebook muestran los montos reales en pesos de 2025 (`nominal × ipc_2025 / ipc_año`), una unidad más fácil de dimensionar que pesos de 2016; es el mismo IPC, solo cambia el año de referencia. El CSV conserva la columna en pesos de 2016.
 
-Script: `scripts/process_coparticipacion.py`. Notebook: `notebooks/01_serie_historica.ipynb`.
+#### Por habitante, como % del PIB y año base
+
+Un monto real que crece no dice si creció más o menos que la población o que la economía. Una versión anterior del proyecto destacaba que la coparticipación real de 2025 era 3,1 veces la de 2003. La cuenta estaba bien, pero el titular exageraba por tres motivos:
+
+1. **El año base.** 2003 es el piso de la crisis de 2001-2002: solo en 2004 la serie sube 47% real. No es un quiebre de definición: la masa total de la Ley 23.548 que registra Hacienda (incluidos Nación y la ANSES) también sube 43% real ese año, por la recuperación de Ganancias y de IVA. Desde 2004, el crecimiento es de 2,14 veces. Antes había además un gráfico indexado a 2003 = 100 para comparar provincias; lo reemplacé por la coparticipación por habitante en niveles, porque el resultado del índice dependía del año base (con base 2004, Buenos Aires, que ese año todavía tenía el Fondo del Conurbano congelado, pasaba a ser la que más crecía).
+2. **La población.** Entre 2004 y 2025 la población estimada creció 27%. Por habitante, el crecimiento es de 1,68 veces desde 2004 (2,44 desde 2003), y 2025 queda en el nivel de 2016.
+3. **La economía.** Como % del PIB, la coparticipación de las 24 pasó de 4,9% en 2004 a 6,7% en 2025 (máximo de 7,5% en 2020, cuando el PIB cayó más que la recaudación).
+
+**Población de cada año** (`scripts/poblacion.py`): entre dos censos, crecimiento a tasa constante entre las fechas censales (17 de noviembre de 2001, 27 de octubre de 2010 y 18 de mayo de 2022), evaluado a mitad de año. Después de 2022 extiendo la tasa 2010-2022 de cada jurisdicción. Es un supuesto: con la caída de la natalidad de esos años, la población 2023-2025 probablemente quede algo sobreestimada (para el total del país, 47,6 millones en 2025) y la coparticipación por habitante, algo subestimada. No hay en el repositorio proyecciones oficiales basadas en el Censo 2022.
+
+**Descomposición** (`descomponer` en `scripts/build_coparticipacion_pib_poblacion.py`). Para el total de las 24, en términos reales vale la identidad
+
+`coparticipación / IPC = PIB real × (deflactor del PIB / IPC) × (masa Ley 23.548 / PIB) × (coparticipación / masa)`
+
+Entre 2004 y 2025 da: PIB real ×1,525; deflactor del PIB / IPC ×1,024; masa / PIB ×1,258; parte de la masa que llega a las 24 ×1,089; total ×2,139. Dividido por la población (×1,275), ×1,678 por habitante. Un test controla que el producto de los factores reproduzca el total. Tres lecturas:
+
+- **No hay ilusión monetaria en la serie.** Deflactada por el deflactor del PIB en vez del IPC, crece ×2,09 en vez de ×2,14: el resultado no depende del índice de precios. Tampoco depende del empalme con Ferreres en 2007-2015, que sigue de cerca al deflactor implícito del INDEC en esos años.
+- **La masa sobre el PIB (×1,26)** mezcla presión tributaria y una reclasificación: desde 2018 las asignaciones específicas de Ganancias entran por la Ley 23.548, y ese año la masa salta de 10,4% a 11,8% del PIB. Parte de la suba de la presión tributaria es, a su vez, un efecto de la inflación: Ganancias sin ajuste por inflación recauda más en términos reales.
+- **La parte que llega a las 24 (×1,09).** Dentro de la Ley 23.548, la porción de las provincias pasó de 48% (2004) a 59% (2025), sobre todo por la devolución del 15% que se detraía para la ANSES (2016-2020). El factor queda en ×1,09 porque, con la definición de este núcleo, hasta 2017 las asignaciones de Ganancias llegaban a las provincias por fuera de la masa. En una primera lectura atribuí a la devolución de la ANSES cerca del 60% de la suba de la coparticipación como % del PIB; con la descomposición completa no se puede separar así, porque el mismo cambio de 2018 mueve los dos últimos factores en sentido contrario.
+
+El PIB del INDEC arranca en 2004, así que el % del PIB y la descomposición no cubren 2003.
+
+Scripts: `scripts/process_coparticipacion.py`, `scripts/poblacion.py` y `scripts/build_coparticipacion_pib_poblacion.py`. Notebook: `notebooks/01_serie_historica.ipynb`.
 
 ---
 
@@ -60,13 +85,19 @@ Script: `scripts/process_coparticipacion.py`. Notebook: `notebooks/01_serie_hist
 ### Fuentes
 
 - **Producto Bruto Geográfico (PBG) por provincia**: CEPAL, sobre metodología base de INDEC (año base 2004). Archivo: `data/raw/pbg/Jurisdiccion_52sectores.xlsx` (hoja `VABpb`), 2004-2024. No es la publicación directa de INDEC (que en su archivo público solo llega a 2017) — es una actualización de CEPAL, la más reciente que encontré. En rigor es el Valor Agregado Bruto a precios básicos, en millones de pesos a precios de 2004; en el proyecto lo llamo PBG por simplicidad.
+- **Derechos de exportación (retenciones)**: Secretaría de Hacienda, serie anual de recursos tributarios por tributo, descargada de la API de series de tiempo de datos.gob.ar (id `142.1_DEREC_2001_A_20`, millones de pesos corrientes). Archivo: `data/raw/fiscal_nacional/derechos_exportacion_anual.csv`.
+- **Exportaciones por provincia y rubro**: INDEC (origen provincial de las exportaciones), misma API (ids `350.1_*`): total del país y Córdoba, en productos primarios, manufacturas de origen agropecuario, manufacturas de origen industrial y combustibles, 1993-2024. Archivo: `data/raw/exportaciones/exportaciones_cordoba_y_total_por_rubro.csv`.
 - **Coeficientes de coparticipación (Ley 23.548)**: planilla "Índices de Distribución de la Coparticipación Federal de Impuestos y Regímenes Especiales de Distribución". El documento no indica qué organismo la emitió; menciona que el Banco de la Nación Argentina distribuye en base a notas instructivas de la Secretaría de Hacienda. Archivo: `data/raw/coeficientes/indices_copa_2018.pdf`, creado el 2 de febrero de 2018 según la metadata del archivo.
 
 ### Metodología
 
 Trabajo con las 24 jurisdicciones en un solo corte (no serie temporal). "Aporta" es el % del PBG de cada provincia sobre la suma de las 24 jurisdicciones en 2024 (la fuente trae además una fila "No distribuido", ~0,06% del total, que dejo afuera para que las participaciones sumen 100%), el año más reciente disponible (dato preliminar en la fuente). "Recibe" es la porción de cada provincia en lo que se reparte **entre provincias**: su coeficiente de Ley 23.548 (con el ajuste de CABA que explico abajo) dividido por la suma de los 24 coeficientes. La métrica es la diferencia en puntos porcentuales (recibe − aporta): positivo significa que la provincia recibe una porción del reparto mayor que su peso económico, negativo lo contrario.
 
-Script: `scripts/build_coefficients_comparison.py`. Notebook: `notebooks/02_aporte_vs_recibo.ipynb`.
+Qué mide y qué no: la coparticipación está diseñada para redistribuir, así que una brecha contra el PBG mide cuánto redistribuye el régimen y hacia dónde, no si el reparto es justo. Y la coparticipación es solo una parte de la relación fiscal de cada provincia con la Nación: quedan afuera los impuestos que no se coparticipan, el gasto nacional directo en cada provincia (por ejemplo, los subsidios a la energía y al transporte, concentrados en el AMBA), las transferencias no automáticas y la previsión social. El notebook lo explica antes de mostrar los resultados.
+
+**Retenciones atribuibles a Córdoba** (`scripts/build_retenciones_cordoba.py`). De lo que queda afuera, lo más relevante para Córdoba son las retenciones, que van enteras al Tesoro Nacional. Las estimo para 2003-2024 repartiendo el total nacional de cada año según la participación de Córdoba en las exportaciones de productos primarios y manufacturas de origen agropecuario (17%-19% según el año), los rubros donde se concentran las retenciones. Como cota baja uso su participación en el total de las exportaciones (10%-15%). Resultado: en 2024, unos $1,48 billones (pesos de 2025; $1,08 billones con la cota baja), el 31% de la coparticipación de Córdoba (23% con la cota baja); en 2008 superaron a la coparticipación (126%) y en 2021-2022 fueron el 62%-67%. Sumando 2003-2024, equivalen al 59% de la coparticipación de esos años.
+
+Scripts: `scripts/build_coefficients_comparison.py` y `scripts/build_retenciones_cordoba.py`. Notebook: `notebooks/02_aporte_vs_recibo.ipynb`.
 
 ### Supuestos y limitaciones
 
@@ -77,6 +108,8 @@ Los 24 coeficientes suman ~0,59, no 1: el resto es lo que retienen Nación y el 
 El PBG de la fuente está a precios constantes de 2004, así que la participación de cada provincia en 2024 está calculada con los precios relativos de 2004. En provincias donde el precio de lo que producen cambió mucho respecto del resto (las petroleras, por ejemplo), la participación a precios corrientes podría ser distinta. La fuente no trae una serie a precios corrientes, así que no lo puedo cuantificar.
 
 El ranking usa el coeficiente legal, no lo que cada jurisdicción efectivamente cobra. El Núcleo 5 muestra que la diferencia entre las dos cosas es casi toda la compensación del Consenso Fiscal; con la participación efectiva de 2025, la brecha de Buenos Aires baja de −10,7 a −9,2 puntos, la de Córdoba pasa de +0,01 a −0,3 y el resto se mueve menos de 0,15 puntos. El notebook muestra las dos versiones.
+
+La estimación de retenciones es de orden de magnitud. Supone que todos los productos primarios y agroindustriales pagan la misma alícuota, cuando la soja y sus derivados pagaron bastante más que el maíz o el trigo: si Córdoba exporta relativamente más soja que el promedio del país, la estimación queda corta, y si exporta relativamente más maíz o maní, queda larga. El origen provincial de INDEC no siempre coincide con el lugar exacto de producción. Y quien soporta el impuesto (en buena medida el productor, vía un precio más bajo) no es necesariamente quien lo paga. No alcanza para calcular un residuo fiscal, porque falta el gasto nacional en la provincia.
 
 El PBG como proxy del aporte tributario tiene un problema conocido: mide dónde se *genera* la actividad económica, no dónde se *paga* el impuesto. Las empresas grandes con operaciones en todo el país suelen tener domicilio fiscal en CABA, así que en las estadísticas de recaudación por jurisdicción buena parte de lo generado en otras provincias figura como pagado en CABA. Si usara esa recaudación en vez del PBG, CABA aparecería aportando todavía más y provincias productivas como Córdoba, menos. El PBG está más cerca de dónde se genera la actividad, pero no es una medición directa de lo que tributa cada provincia.
 
@@ -147,13 +180,13 @@ Y, como en el Núcleo 3, el indicador de sensibilidad es una simplificación de 
 
 ## Núcleo 5 — Las 24 jurisdicciones comparadas
 
-Usa la serie del Núcleo 1 (con el detalle por concepto de `load_ron_por_concepto`), los coeficientes del Núcleo 2 y una fuente propia: la población por jurisdicción del Censo 2022 de INDEC, resultados definitivos (`data/raw/poblacion/c2022_tp_est_c1.xlsx`, descargado de <https://www.indec.gob.ar/ftp/cuadros/poblacion/c2022_tp_est_c1.xlsx>). El cuadro trae dos subtotales de Buenos Aires sin código de jurisdicción (24 partidos del GBA y resto) que se descartan; el script controla que las 24 jurisdicciones sumen el total del país, 45.892.285 personas.
+Usa la serie del Núcleo 1 (con el detalle por concepto de `load_ron_por_concepto`), los coeficientes del Núcleo 2, la población de cada año estimada entre censos (`scripts/poblacion.py`, ver Núcleo 1) y la población por jurisdicción del Censo 2022 de INDEC, resultados definitivos (`data/raw/poblacion/c2022_tp_est_c1.xlsx`, descargado de <https://www.indec.gob.ar/ftp/cuadros/poblacion/c2022_tp_est_c1.xlsx>). El cuadro trae dos subtotales de Buenos Aires sin código de jurisdicción (24 partidos del GBA y resto) que se descartan; el script controla que las 24 jurisdicciones sumen el total del país, 45.892.285 personas.
 
 ### Metodología
 
 Cuatro comparaciones entre las 23 provincias y CABA:
 
-- **Crecimiento real 2003-2025**: coparticipación real 2025 / real 2003, por jurisdicción.
+- **Crecimiento real por habitante 2004-2025**: coparticipación real 2025 / real 2004, dividida por el crecimiento de la población estimada de cada jurisdicción. Una versión anterior mostraba el crecimiento del monto real entre 2003 y 2025, que daba casi lo mismo para todas (23 de las 24 entre ×3,10 y ×3,20): con coeficientes fijos, el resultado era casi mecánico, y arrancaba en el piso de la crisis. Por habitante, el rango va de ×1,10 (Tierra del Fuego) a ×1,98 (CABA), y casi toda la diferencia la explica el crecimiento de la población (correlación de rangos −0,98), porque la Ley 23.548 no tiene ningún componente que siga a la población. El CSV conserva las dos medidas.
 - **Participación en el reparto, año por año**: lo que recibió cada una sobre el total de las 24 (en montos nominales; el deflactor es común y se cancela), medido como diferencia en puntos porcentuales contra su propia participación de 2003 para poder mostrar en un mismo eje a Buenos Aires (más de 20%) y a Tierra del Fuego (poco más de 1%).
 - **Participación 2025 contra el coeficiente legal** renormalizado entre las 24 (la misma base del Núcleo 2), con y sin la compensación del Consenso Fiscal.
 - **Por habitante**: coparticipación 2022 dividida por la población del Censo 2022, llevada a pesos de 2025 con el mismo IPC del Núcleo 1 (`nominal_2022 × ipc_2025 / ipc_2022`), y un índice contra el promedio de las 24 ponderado por población (promedio = 1). El índice es igual a la participación de 2022 en el reparto dividida por la participación en la población; hay un test que lo controla.
@@ -162,7 +195,7 @@ Script: `scripts/build_comparativo_provincias.py`. Notebook: `notebooks/05_compa
 
 ### Supuestos y limitaciones
 
-La comparación por habitante es solo de 2022. Usé la coparticipación de ese año y no la de 2025 porque dividir montos de 2025 por la población de 2022 mezclaría años, y no tengo en el repositorio proyecciones oficiales de población por provincia basadas en el Censo 2022. El censo es del 18 de mayo de 2022 y la coparticipación es la suma del año, una diferencia de meses que no cambia el orden de las jurisdicciones. El resultado (cuanto menos población, más coparticipación por habitante) refleja el diseño de los coeficientes, que son fijos y no dependen de la población; no lo interpreto como una medida de necesidad ni de eficiencia del gasto.
+La foto por habitante de cada jurisdicción contra el promedio es de 2022, el año del censo: para 2025 tendría que usar la población extrapolada, y no tengo en el repositorio proyecciones oficiales de población por provincia basadas en el Censo 2022. El crecimiento por habitante 2004-2025 sí usa la población estimada de 2025, con el supuesto de extrapolación del Núcleo 1; un error de un par de puntos en la población de 2025 no cambia el orden, porque las diferencias de crecimiento poblacional entre jurisdicciones van de 13% a 90%. El censo es del 18 de mayo de 2022 y la coparticipación es la suma del año, una diferencia de meses que no cambia el orden de las jurisdicciones. El resultado (cuanto menos población, más coparticipación por habitante) refleja el diseño de los coeficientes, que son fijos y no dependen de la población; no lo interpreto como una medida de necesidad ni de eficiencia del gasto.
 
 Los movimientos de la participación los asocio a cambios de reglas conocidos (Fondo del Conurbano congelado hasta 2017, Decreto 194/2016 y Ley 27.606 para CABA, fallos de la Corte Suprema de noviembre de 2015 sobre la detracción del 15% para la ANSES). La serie muestra los movimientos y su momento coincide con esas normas, pero no reconstruyo cada norma por separado: es una lectura de los datos, no una descomposición contable.
 

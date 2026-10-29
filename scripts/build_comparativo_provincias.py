@@ -4,7 +4,13 @@ Núcleo 5 — Las 24 jurisdicciones comparadas.
 Parte de la misma serie del Núcleo 1 (`data/processed/coparticipacion_real.csv`) y arma,
 para cada provincia y CABA:
 
-  - `multiplicador_real_2003_2025`: coparticipación real 2025 / real 2003.
+  - `multiplicador_real_2003_2025`: coparticipación real 2025 / real 2003. 2003 es el
+    piso de la crisis (solo en 2004 la serie sube 47% real), así que se agrega la misma
+    medida desde 2004 (`multiplicador_real_2004_2025`).
+  - `crecimiento_poblacion_2004_2025` y `multiplicador_por_habitante_2004_2025`: la
+    población estimada entre censos (`poblacion.py`) y el crecimiento real por habitante.
+    Con coeficientes fijos, el monto de todas crece casi igual, así que lo que separa a
+    unas de otras por habitante es cuánto creció su población.
   - `participacion_2003`, `participacion_2025`: % de lo que se repartió entre las 24
     jurisdicciones ese año (sobre montos nominales; el deflactor es común y se cancela).
   - `coeficiente_legal_renormalizado`: coeficiente de la Ley 23.548 / suma de los 24
@@ -36,44 +42,17 @@ import pandas as pd
 BASE_DIR = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(BASE_DIR / "scripts"))
 from coeficientes_ley23548 import COEFICIENTES_COPARTICIPACION  # noqa: E402
+from poblacion import load_poblacion_censo_2022, poblacion_anual  # noqa: E402
 from process_coparticipacion import load_ron_por_concepto  # noqa: E402
 
 COPART_PATH = BASE_DIR / "data" / "processed" / "coparticipacion_real.csv"
-POBLACION_PATH = BASE_DIR / "data" / "raw" / "poblacion" / "c2022_tp_est_c1.xlsx"
 OUTPUT_PATH = BASE_DIR / "data" / "processed" / "comparativo_provincias.csv"
 
 ANIO_INICIAL = 2003
+ANIO_POSCRISIS = 2004
 ANIO_FINAL = 2025
 ANIO_CENSO = 2022
 CONCEPTO_COMPENSACION = "consenso fiscal ley 27429 compensacion"
-
-# Nombres del cuadro de INDEC que no coinciden con los del resto del repositorio.
-NOMBRES_INDEC = {
-    "Ciudad Autónoma de Buenos Aires": "CABA",
-    "Tierra del Fuego, Antártida e Islas del Atlántico Sur (1)": "Tierra del Fuego",
-}
-
-
-def load_poblacion_censo_2022() -> pd.Series:
-    """Población 2022 por jurisdicción, del Cuadro 1 del Censo 2022 (INDEC).
-
-    El cuadro intercala dos subtotales de Buenos Aires (24 partidos del GBA y resto) sin
-    código de jurisdicción; se descartan. Se controla que las 24 sumen el total del país.
-    """
-    cuadro = pd.read_excel(POBLACION_PATH, sheet_name="Cuadro 1 ", header=None)
-    cuadro = cuadro.iloc[:, [0, 1, 3]]
-    cuadro.columns = ["codigo", "jurisdiccion", "poblacion"]
-    total = cuadro.loc[cuadro["jurisdiccion"] == "Total", "poblacion"]
-    con_codigo = cuadro["codigo"].astype(str).str.strip().str.fullmatch(r"\d+")
-    filas = cuadro[con_codigo & cuadro["poblacion"].notna()]
-    poblacion = (
-        filas.assign(provincia=filas["jurisdiccion"].replace(NOMBRES_INDEC))
-        .set_index("provincia")["poblacion"].astype(int)
-    )
-    if len(total) != 1 or len(poblacion) != 24 or poblacion.sum() != int(total.iloc[0]):
-        raise SystemExit("El cuadro de población del Censo 2022 no tiene la estructura esperada.")
-    return poblacion
-
 
 def participaciones_anuales() -> pd.DataFrame:
     """Participación de cada jurisdicción en el total repartido entre las 24, por año
@@ -112,6 +91,7 @@ def build_comparativo() -> pd.DataFrame:
             "real_2003_millones": real.loc[ANIO_INICIAL],
             "real_2025_millones": real.loc[ANIO_FINAL],
             "multiplicador_real_2003_2025": real.loc[ANIO_FINAL] / real.loc[ANIO_INICIAL],
+            "multiplicador_real_2004_2025": real.loc[ANIO_FINAL] / real.loc[ANIO_POSCRISIS],
             "participacion_2003": participacion.loc[ANIO_INICIAL],
             "participacion_2025": participacion.loc[ANIO_FINAL],
             "coeficiente_legal_renormalizado": coeficientes / coeficientes.sum(),
@@ -140,8 +120,15 @@ def build_comparativo() -> pd.DataFrame:
     tabla["indice_per_capita_2022"] = tabla["per_capita_2022_pesos_2025"] / (
         censo_pesos_final.sum() / poblacion.sum()
     )
+    poblacion_estimada = poblacion_anual([ANIO_POSCRISIS, ANIO_FINAL])
+    tabla["crecimiento_poblacion_2004_2025"] = (
+        poblacion_estimada.loc[ANIO_FINAL] / poblacion_estimada.loc[ANIO_POSCRISIS] - 1
+    )
+    tabla["multiplicador_por_habitante_2004_2025"] = tabla["multiplicador_real_2004_2025"] / (
+        1 + tabla["crecimiento_poblacion_2004_2025"]
+    )
     tabla.index.name = "provincia"
-    return tabla.sort_values("multiplicador_real_2003_2025").reset_index()
+    return tabla.sort_values("multiplicador_por_habitante_2004_2025").reset_index()
 
 
 def main() -> None:
