@@ -15,6 +15,7 @@ Esta carpeta tiene los datos crudos, tal como los conseguí. Nunca se editan a m
 | PIB nacional — INDEC, cuentas nacionales | `pib_nacional/` | 1 |
 | Derechos de exportación — Secretaría de Hacienda (vía datos.gob.ar) | `fiscal_nacional/` | 2 |
 | Exportaciones por provincia y rubro — INDEC (vía datos.gob.ar) | `exportaciones/` | 2 |
+| Ejecución presupuestaria provincial — DNCFP, Ministerio de Economía | `ejecucion_presupuestaria_provincial/` | 4 |
 
 ### Cómo los conseguí
 
@@ -51,6 +52,12 @@ Todos los archivos los descargué o los conseguí a mano y los versioné acá ta
 - **Organismo**: INDEC, cuentas nacionales, año base 2004.
 - **URL de origen**: <https://www.indec.gob.ar/ftp/cuadros/economia/sh_oferta_demanda_09_26.xls> (listado en <https://www.indec.gob.ar/indec/web/Nivel4-Tema-3-9-47>).
 - **Archivo usado**: `pib_nacional/sh_oferta_demanda_09_26.xls`, hojas `cuadro 8` (precios corrientes) y `cuadro 1` (precios de 2004), fila "Producto Interno Bruto", columnas "Total" de cada año. Cubre 2004-2025; no tiene 2003.
+
+### Ejecución presupuestaria provincial (Núcleo 4)
+
+- **Organismo**: Dirección Nacional de Coordinación Fiscal con las Provincias, Ministerio de Economía de la Nación.
+- **URL de origen**: <https://www.argentina.gob.ar/sites/default/files/serie_aif-apnf-2025.xlsx> (listado en <https://www.argentina.gob.ar/economia/sechacienda/coordinacion-fiscal-provincial/ejecucion-presupuestaria-provincial/ejecuciones>).
+- **Archivo usado**: `ejecucion_presupuestaria_provincial/serie_aif-apnf-2025.xlsx`: esquema ahorro-inversión-financiamiento de la Administración Pública No Financiera, una hoja por jurisdicción, 2005-2025, en millones de pesos corrientes. La Pampa no tiene datos de 2025.
 
 ### Derechos de exportación y exportaciones por provincia (Núcleo 2)
 

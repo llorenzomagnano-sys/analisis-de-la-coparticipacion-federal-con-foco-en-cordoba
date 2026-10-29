@@ -1,0 +1,21 @@
+{
+  "organismo": "Ministerio de Economía de la Nación, Secretaría de Hacienda, Dirección Nacional de Coordinación Fiscal con las Provincias (DNCFP)",
+  "descripcion": "Ejecución presupuestaria provisoria de la Administración Pública No Financiera de cada provincia y CABA, esquema ahorro-inversión-financiamiento, cuarto trimestre acumulado (año completo), 2005-2025",
+  "obtenido_por": "descarga directa desde el sitio del Ministerio de Economía",
+  "url_pagina": "https://www.argentina.gob.ar/economia/sechacienda/coordinacion-fiscal-provincial/ejecucion-presupuestaria-provincial/ejecuciones",
+  "fecha_incorporacion_al_repo": "2026-10-29",
+  "archivos": [
+    {
+      "archivo": "serie_aif-apnf-2025.xlsx",
+      "url_origen": "https://www.argentina.gob.ar/sites/default/files/serie_aif-apnf-2025.xlsx",
+      "sha256": "c66710a6414d84707ba0124ef0e69af023f02231efbfe533bbcd7216342c35fb",
+      "hojas": "una por jurisdicción ('Ciudad' = CABA; 'Santiago del  Estero' con doble espacio, tal cual el original) más 'Consolidado', que no se usa (el agregado se calcula sumando las jurisdicciones con datos)",
+      "unidades": "millones de pesos corrientes",
+      "cobertura": "2005-2025; La Pampa no tiene datos de 2025 (todas las filas en cero) y queda afuera de ese año",
+      "notas_de_la_fuente": "Córdoba incluye las agencias que forman parte de su Administración Pública No Financiera. Para La Pampa y San Luis, el archivo aclara que los datos corresponden a estimaciones de la DNCFP, sin indicar qué años.",
+      "control": "la fila 'Sub - Total' (Ley 23.548 neta más Financiamiento Educativo) coincide con la coparticipación sin la compensación del Consenso Fiscal de la serie de Hacienda del Núcleo 1, en las 24 jurisdicciones y en todos los años 2018-2025 (test en scripts/test_procesamiento.py)",
+      "usado_en_nucleo_4": true,
+      "uso": "comparar la dependencia de las transferencias nacionales de Córdoba con la de las demás jurisdicciones"
+    }
+  ]
+}

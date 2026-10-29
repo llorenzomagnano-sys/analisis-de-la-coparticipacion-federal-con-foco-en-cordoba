@@ -10,9 +10,10 @@ import pandas as pd
 import pytest
 
 from build_coefficients_comparison import OUTPUT_PATH as APORTE_PATH
-from build_comparativo_provincias import build_comparativo, participaciones_anuales
+from build_comparativo_provincias import build_comparativo, compensacion_consenso_fiscal, participaciones_anuales
 from build_coparticipacion_pib_poblacion import build_agregada, descomponer
 from build_dependencia_fiscal import base_calibrada_cordoba, build_ratio, calcular_sensibilidad
+from build_dependencia_provincias import build_dependencia
 from calibracion_iaraf import IMPACTO_PROVINCIAS_IARAF, calibrar, contrastar_con_cordoba
 from build_retenciones_cordoba import build_retenciones
 from coeficientes_ley23548 import COEFICIENTES_COPARTICIPACION
@@ -158,6 +159,25 @@ def test_retenciones_de_cordoba_usan_participaciones_validas():
     # Córdoba pesa más en los rubros agropecuarios que en el total, así que la cota baja
     # (participación en el total) queda siempre por debajo de la estimación principal.
     assert (tabla["retenciones_cordoba_cota_baja_millones"] < tabla["retenciones_cordoba_millones"]).all()
+
+
+def test_ejecucion_presupuestaria_registra_la_misma_coparticipacion_que_hacienda():
+    # Dos publicaciones distintas del Ministerio de Economía: la ejecución presupuestaria
+    # de cada provincia y la serie de transferencias (RON). Desde 2018 las dos registran
+    # la Ley 23.548 más el Financiamiento Educativo de la misma forma.
+    ejecucion = build_dependencia().set_index(["provincia", "anio"])["ley23548_y_financiamiento_educativo"]
+    for anio in range(2018, 2026):
+        hacienda = compensacion_consenso_fiscal(anio)["sin_compensacion"]
+        provincias = ejecucion.xs(anio, level="anio")
+        assert len(provincias) >= 23
+        assert (provincias / hacienda.reindex(provincias.index) - 1).abs().max() < 1e-6
+
+
+def test_indicadores_de_dependencia_estan_entre_cero_y_uno():
+    df = build_dependencia()
+    columnas = ["origen_nacional_sobre_ingresos_corrientes", "transferencias_nacionales_sobre_ingresos",
+                "tributarios_propios_sobre_ingresos"]
+    assert df[columnas].gt(0).all().all() and df[columnas].lt(1).all().all()
 
 
 def test_sensibilidad_es_el_shock_por_la_parte_proporcional_de_la_dependencia(dependencia):
