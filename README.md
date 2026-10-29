@@ -65,11 +65,6 @@ La metodología completa (fuentes, supuestos y limitaciones de cada núcleo) est
 **Qué muestra:** lo que recibió Córdoba cada año, en pesos de 2025.
 **Qué mirar:** la coparticipación sube y baja con la economía, porque depende de lo que se recauda. Las caídas coinciden con las crisis: 2009 (crisis internacional, −7%), 2019-2020 (recesión y pandemia, −7% y −8%) y 2023-2024 (sequía y recesión, −5% y −8%). En 2016 Córdoba sube aunque el total de las provincias casi no crece: es el fallo de la Corte Suprema que le dejó de descontar el 15% para la ANSES.
 
-![Coparticipación real por habitante, Córdoba y provincias de referencia, 2003-2025](output/figures/comparativo_provincias_por_habitante_2003_2025.png)
-
-**Qué muestra:** lo que recibió por habitante Córdoba, comparada con Santa Fe, Mendoza y Buenos Aires.
-**Qué mirar:** la provincia que más recibe en total, Buenos Aires, es la que menos recibe por persona. Su salto de 2017-2019 es la vuelta del Fondo del Conurbano con el Consenso Fiscal. Córdoba creció menos que Santa Fe por habitante porque su población creció más (27% contra 19%).
-
 ![Coparticipación de las 24 jurisdicciones por habitante y como % del PIB](output/figures/coparticipacion_por_habitante_y_pct_pib.png)
 
 **Qué muestra:** el total de las 24 jurisdicciones por habitante (izquierda) y como porcentaje del PIB (derecha).
@@ -89,10 +84,7 @@ La metodología completa (fuentes, supuestos y limitaciones de cada núcleo) est
 
 ### Núcleo 3 — Qué pasa si cae la recaudación
 
-![Impacto de la caída de recaudación del primer cuatrimestre de 2026, por provincia](output/figures/simulador_impacto_1cuatrimestre2026.png)
-
-**Qué muestra:** cuánto pierde cada jurisdicción en el primer cuatrimestre de 2026 con una caída de 6,3% de la recaudación coparticipable.
-**Qué mirar:** el largo de cada barra solo refleja el tamaño del coeficiente. En porcentaje, todas pierden lo mismo.
+Como el reparto es proporcional a coeficientes fijos, ante una caída de la recaudación todas las jurisdicciones pierden el mismo porcentaje de lo que les corresponde. Con la caída de 6,3% de comienzos de 2026, Córdoba pierde unos $120.100 millones en el cuatrimestre, casi lo mismo que Santa Fe y menos de la mitad que Buenos Aires. Las diferencias en pesos solo reflejan el tamaño de cada coeficiente.
 
 ![Demo del simulador mostrando el impacto como % de la recaudación total de Córdoba](output/figures/simulador_interactivo_demo.gif)
 
