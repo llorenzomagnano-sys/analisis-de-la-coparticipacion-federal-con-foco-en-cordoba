@@ -98,4 +98,6 @@ def poblacion_anual(anios) -> pd.DataFrame:
         inicio, fin = (2001, 2010) if momento < t[2010] else (2010, 2022)
         tasa = (censos[fin] / censos[inicio]) ** (1 / (t[fin] - t[inicio]))
         filas[anio] = censos[inicio] * tasa ** (momento - t[inicio])
-    return pd.DataFrame(filas).T.rename_axis("anio")
+    # Redondeada a personas: además de ser la unidad natural, deja la salida igual en
+    # cualquier plataforma (la potencia fraccionaria puede diferir en el último decimal).
+    return pd.DataFrame(filas).T.round().astype(int).rename_axis("anio")
