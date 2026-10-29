@@ -45,6 +45,11 @@ SURFACE = "#fcfcfb"
 
 RANGO_METER = 15  # el meter cubre -15% a +15%
 
+FUENTE = (
+    "Fuente: elaboración propia en base a datos de la Dirección General de Rentas de "
+    "Córdoba, IARAF y la Ley 23.548."
+)
+
 # Recorrido del "arrastre del slider": 0 -> -15 -> +10 -> escenario de comienzos de 2026
 # (calibrado con IARAF) -> 0. Se interpola entre estos puntos para que la animación se
 # sienta fluida, no a saltos.
@@ -83,9 +88,9 @@ def render_frame(variacion_pct: float, recaudacion_base: float, recaudacion_tota
     impacto_pct_recaudacion = impacto_pesos / recaudacion_total
     color = COLOR_NEGATIVO if impacto_pesos < 0 else COLOR_POSITIVO
 
-    fig = plt.figure(figsize=(7.2, 4), dpi=130)
+    fig = plt.figure(figsize=(7.2, 4.3), dpi=130)
     fig.patch.set_facecolor(SURFACE)
-    ax = fig.add_axes([0, 0, 1, 1])
+    ax = fig.add_axes([0, 0.07, 1, 0.93])
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)
     ax.axis("off")
@@ -130,6 +135,8 @@ def render_frame(variacion_pct: float, recaudacion_base: float, recaudacion_tota
 
     for pct_tick, x_tick, ha in [(-RANGO_METER, x0, "left"), (0, centro, "center"), (RANGO_METER, x1, "right")]:
         ax.text(x_tick, y_meter - 0.075, f"{pct_tick:+.0f}%".replace("+0%", "0%"), fontsize=8.5, color=INK_MUTED, ha=ha, va="top")
+
+    fig.text(0.07, 0.03, FUENTE, fontsize=8, color=INK_SECONDARY, ha="left", va="center")
 
     fig.canvas.draw()
 
