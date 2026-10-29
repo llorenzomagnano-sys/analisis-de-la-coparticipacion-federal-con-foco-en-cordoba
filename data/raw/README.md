@@ -11,6 +11,7 @@ Esta carpeta tiene los datos crudos, tal como los conseguí. Nunca se editan a m
 | PBG por provincia — CEPAL | `pbg/` | 2 |
 | Coeficientes de coparticipación | `coeficientes/` | 2, 3 |
 | Recaudación de Córdoba — Dirección General de Rentas | `ingresos_cordoba/` | 4 |
+| Población por jurisdicción — INDEC, Censo 2022 | `poblacion/` | 5 |
 
 ### Cómo los conseguí
 
@@ -34,6 +35,12 @@ Todos los archivos los descargué o los conseguí a mano y los versioné acá ta
 - **Organismo**: Dirección General de Rentas de la Provincia de Córdoba (archivo que ya tenía armado de antes).
 - **Archivo usado**: `ingresos_cordoba/serie_recaudacion_provincial.xlsx` (nombre original: `Serie-recaudacion-provincial_Ene15-Ago26.xlsx`), hoja `Serie_Mensual`: recaudación mensual por concepto, enero 2015 a agosto 2026. Para el Núcleo 4 uso solo años calendario completos, 2015-2025, y tres filas: el total, los recursos de origen provincial y la coparticipación federal.
 - **Limitación de alcance**: el total excluye lo recaudado por otros organismos públicos provinciales (por ejemplo, EPEC), según la nota al pie del archivo. El detalle, incluida la corrección de unidades (el archivo dice "millones de pesos" pero son pesos), está en `docs/methodology.md`.
+
+### Población por jurisdicción (Núcleo 5)
+
+- **Organismo**: INDEC, Censo Nacional de Población, Hogares y Viviendas 2022, resultados definitivos.
+- **URL de origen**: <https://www.indec.gob.ar/ftp/cuadros/poblacion/c2022_tp_est_c1.xlsx> (listado en <https://www.indec.gob.ar/indec/web/Nivel4-Tema-2-41-165>).
+- **Archivo usado**: `poblacion/c2022_tp_est_c1.xlsx`, hoja `Cuadro 1 ` (con el espacio final del original), columna 2022. Las 24 jurisdicciones suman el total del país, 45.892.285 personas; el script lo controla.
 
 ## Otros archivos en esta carpeta
 

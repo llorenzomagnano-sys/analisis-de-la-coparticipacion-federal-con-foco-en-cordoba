@@ -17,6 +17,7 @@ Lo organicé en cuatro preguntas que se van encadenando: cómo evolucionó en el
 - **Simulador de sensibilidad**: calibrado con la caída de recaudación de comienzos de 2026 que dio a conocer IARAF, una baja de ~6,3% en la recaudación nacional coparticipable le cuesta a Córdoba unos $120.100 millones en un cuatrimestre. Como el reparto es proporcional, todas las provincias pierden el mismo porcentaje de lo que les corresponde; lo que cambia la gravedad del golpe es cuánto depende cada una de la coparticipación (Núcleo 4).
 - **Dependencia fiscal de Córdoba (2015-2025)**: la coparticipación pasó de explicar el 52,0% de los ingresos de Córdoba en 2015 a un máximo de 57,6% en 2023, y bajó a 53,1% en 2025. En pesos constantes, la suba se explica sobre todo por la recaudación propia, que cayó un 20% entre 2017 y 2020 y se mantuvo cerca de ese piso hasta 2024, mientras la coparticipación se recuperaba. Con la dependencia de 2025, una caída del 10% en la recaudación nacional coparticipable reduce los ingresos totales de la provincia en un 5,2%.
 - **Las 24 jurisdicciones comparadas**: entre 2003 y 2025, 22 de las 24 multiplicaron su coparticipación real entre 3,10 y 3,20 veces. Córdoba quedó última por poco (x3,10) y CABA se despegó (x3,57). Los movimientos grandes del reparto vienen de cambios de reglas y no de la economía de cada provincia: el Fondo del Conurbano congelado hasta 2017 le hizo perder a Buenos Aires 5 puntos del reparto, que recuperó con el Consenso Fiscal, y CABA pasó de 2% a más de 5% del reparto entre 2016 y 2020. Sin la compensación del Consenso Fiscal, cada jurisdicción recibe hoy prácticamente su coeficiente legal. Esa compensación va en un 56% a Buenos Aires, y por eso Córdoba recibe 0,29 puntos menos que su coeficiente: unos $157.100 millones en 2025, si se hubiera repartido según los coeficientes.
+- **Por habitante (Censo 2022)**: las diferencias son mucho mayores. Tierra del Fuego y Catamarca reciben casi tres veces el promedio de las 24 y Buenos Aires y CABA bastante menos (0,59 y 0,34 veces): cuanto menos población, más coparticipación por habitante. Córdoba queda justo en el promedio, unos $1,41 millones por habitante en 2022 (en pesos de 2025). Junto con el Núcleo 2, es una provincia neutral en el reparto.
 
 ## Núcleos de análisis
 
@@ -72,6 +73,10 @@ Los cambios en la porción de cada una vienen de cambios de reglas puntuales: el
 
 ![Cambio en la participación de cada jurisdicción en el reparto, contra 2003](output/figures/provincias_participacion_2003_2025.png)
 
+Por habitante, con la población del Censo 2022, la foto cambia: las jurisdicciones chicas reciben mucho más que el promedio, y Córdoba queda justo en él:
+
+![Coparticipación por habitante de cada jurisdicción en 2022, contra el promedio](output/figures/provincias_per_capita_2022.png)
+
 ## Simulador interactivo
 
 El Núcleo 3 tiene un simulador interactivo (slider de `ipywidgets`) dentro de `notebooks/03_simulador_sensibilidad.ipynb`, más la versión web linkeada arriba. Elegí `ipywidgets` en vez de una app Streamlit para que todo el proyecto se pudiera reproducir desde los notebooks sin depender de un servidor; la lógica (`scripts/simulator.py`) está separada y sin dependencias de notebook, así que la versión web es solo esa misma fórmula en JavaScript.
@@ -98,6 +103,8 @@ run_all.py         # Corre todo el pipeline de procesamiento + notebooks con un 
 | Producto Bruto Geográfico por provincia (`Jurisdiccion_52sectores.xlsx`, descargado a mano, sin URL verificada) | CEPAL, sobre metodología base de INDEC | 2 |
 | Índices de distribución de la coparticipación federal (`indices_copa_2018.pdf`, planilla de febrero de 2018, descargada a mano) | No figura en el documento (menciona instrucciones de la Secretaría de Hacienda al BNA) | 2, 3, 4, 5 |
 | Recaudación provincial (`serie_recaudacion_provincial.xlsx`, sin URL pública estable) | Dirección General de Rentas de Córdoba | 4 |
+| [Caída de la recaudación nacional en el primer cuatrimestre de 2026](https://www.iaraf.org/index.php/13-areas-de-estudio/area-fiscal/723-informe-economico-2026-05-05) (escenario de referencia del simulador) | IARAF | 3 |
+| [Población por jurisdicción, Censo 2022 (resultados definitivos)](https://www.indec.gob.ar/ftp/cuadros/poblacion/c2022_tp_est_c1.xlsx) | INDEC | 5 |
 
 Ninguna de estas fuentes tiene una licencia restrictiva conocida para este tipo de análisis, pero no todas tienen una URL pública verificada de origen. De la compilación de Ferreres no versiono el archivo completo, solo las 14 tasas de variación anual que usa el empalme. El detalle de cómo conseguí cada archivo, con qué alcance temporal y qué limitaciones tiene, está en [`data/raw/README.md`](data/raw/README.md) y en [`docs/methodology.md`](docs/methodology.md).
 
@@ -130,9 +137,9 @@ Cada una de estas se documenta en detalle, con la decisión tomada y su razón, 
 
 - **Núcleo 1** no llega a 1990 (la idea original) porque no existe una fuente de montos nominales de coparticipación por provincia para 1990-2002; el rango quedó en 2003-2025. El tramo 2003-2016 depende de un IPC empalmado con una fuente privada (Ferreres/Norte y Sur), porque el IPC oficial de 2007-2015 quedó desacreditado por la intervención del INDEC y el actual recién arranca en diciembre de 2016. Hacienda cambió varias veces la forma de informar la coparticipación (bruta o neta del Financiamiento Educativo, Ganancias aparte hasta 2017); la serie las unifica en una sola definición, que para Córdoba coincide con la de la propia provincia en todos los años 2015-2025.
 - **Núcleo 2** usa el PBG como proxy del aporte tributario real, que tiene un problema de atribución geográfica conocido: las empresas suelen tributar donde tienen sede fiscal, no donde generan la actividad económica. Eso probablemente infla el aporte de CABA y subestima el de provincias productivas como Córdoba. Además, la fuente está a precios constantes de 2004, así que las participaciones de 2024 usan los precios relativos de ese año.
-- **Núcleo 3** es un modelo lineal y proporcional, calibrado con una sola cifra pública (un cuatrimestre de recaudación). Es una calculadora de escenarios, no un modelo validado contra una serie independiente.
+- **Núcleo 3** es un modelo lineal y proporcional, calibrado con una sola cifra pública (un cuatrimestre de recaudación). La caída total de $5,1 billones está verificada en el informe de IARAF; los $1,4 billones que pierden las provincias no los pude verificar en el original (otra fuente publicó $1,3 billones, que daría un impacto ~7% menor). Es una calculadora de escenarios, no un modelo validado contra una serie independiente.
 - **Núcleo 4** usa como proxy de "ingresos corrientes totales" de Córdoba la recaudación administrada por la Dirección General de Rentas, que excluye lo recaudado por otros organismos provinciales como EPEC. El indicador de sensibilidad es una simplificación de primera ronda: no modela ninguna respuesta de política provincial ante una caída de ingresos.
-- **Núcleo 5** compara montos totales, no por habitante, porque el repositorio no tiene datos de población por provincia. El 1,55% adicional que Nación transfiere a CABA por la cautelar de 2022 no aparece en la serie de Hacienda que uso.
+- **Núcleo 5** compara por habitante solo en 2022, el año del censo: no hay en el repositorio población por provincia para los demás años. El 1,55% adicional que Nación transfiere a CABA por la cautelar de 2022 no aparece en la serie de Hacienda que uso.
 
 ## Licencia
 

@@ -2,10 +2,13 @@
 Núcleo 3 — Calibración del escenario de referencia con la cifra pública de IARAF.
 
 IARAF informó que en el primer cuatrimestre de 2026 la recaudación tributaria nacional
-cayó en términos reales unos $5,1 billones, y que $1,4 billones de esa caída fueron
-menos coparticipación para las provincias. Esta calibración busca la variación % de la
-masa coparticipable que, con los coeficientes de la Ley 23.548, reproduce esos $1,4
-billones.
+cayó un 6,7% real interanual, unos $5,1 billones (FUENTE_IARAF). De esa caída, $1,4
+billones habrían sido menos coparticipación para las provincias; esa cifra no está en el
+resumen publicado en la web de IARAF sino, según la prensa, en el informe completo (un
+PDF en Google Drive que no pude abrir), así que no está verificada contra el original.
+Esta calibración busca la variación % de la masa coparticipable que, con los
+coeficientes de la Ley 23.548, reproduce esos $1,4 billones. El modelo es lineal: con
+otra cifra de impacto, la variación y el impacto por provincia escalan en proporción.
 
 Cómo se arma la masa coparticipable de referencia para el cuatrimestre:
 
@@ -36,6 +39,9 @@ from build_comparativo_provincias import compensacion_consenso_fiscal  # noqa: E
 from coeficientes_ley23548 import COEFICIENTES_COPARTICIPACION  # noqa: E402
 from process_coparticipacion import load_ipc_nacional_mensual  # noqa: E402
 
+FUENTE_IARAF = (
+    "https://www.iaraf.org/index.php/13-areas-de-estudio/area-fiscal/723-informe-economico-2026-05-05"
+)
 IMPACTO_PROVINCIAS_IARAF = -1.4e12  # pesos, primer cuatrimestre de 2026
 CAIDA_TOTAL_RECAUDACION_IARAF = -5.1e12  # pesos, primer cuatrimestre de 2026
 

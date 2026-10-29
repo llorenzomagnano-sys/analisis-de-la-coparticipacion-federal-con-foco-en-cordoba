@@ -10,7 +10,7 @@ import pandas as pd
 import pytest
 
 from build_coefficients_comparison import OUTPUT_PATH as APORTE_PATH
-from build_comparativo_provincias import build_comparativo
+from build_comparativo_provincias import build_comparativo, participaciones_anuales
 from build_dependencia_fiscal import base_calibrada_cordoba, build_ratio, calcular_sensibilidad
 from calibracion_iaraf import calibrar
 from coeficientes_ley23548 import COEFICIENTES_COPARTICIPACION
@@ -95,6 +95,18 @@ def test_sin_compensacion_cada_jurisdiccion_recibe_su_coeficiente_legal():
     diferencia = tabla["participacion_2025_sin_compensacion"] - tabla["coeficiente_legal_renormalizado"]
     assert (diferencia.abs() < 0.002).all()
     assert tabla["participacion_2025"].sum() == pytest.approx(1.0)
+
+
+def test_poblacion_y_per_capita_son_consistentes():
+    tabla = build_comparativo().set_index("provincia")
+    assert tabla["poblacion_2022"].sum() == 45_892_285  # total del país, Censo 2022
+    # El índice es la participación 2022 sobre la participación en la población, así que
+    # el promedio ponderado por población tiene que dar exactamente 1.
+    ponderado = (tabla["indice_per_capita_2022"] * tabla["poblacion_2022"]).sum() / tabla["poblacion_2022"].sum()
+    assert ponderado == pytest.approx(1.0)
+    participacion_2022 = participaciones_anuales().loc[2022]
+    esperado = participacion_2022 / (tabla["poblacion_2022"] / tabla["poblacion_2022"].sum())
+    assert (tabla["indice_per_capita_2022"] - esperado).abs().max() < 1e-9
 
 
 def test_sensibilidad_es_el_shock_por_la_parte_proporcional_de_la_dependencia(dependencia):
