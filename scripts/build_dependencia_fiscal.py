@@ -36,9 +36,9 @@ Córdoba según la serie RON de Hacienda (Núcleo 1) y `diferencia_ron_vs_provin
 diferencia relativa contra el archivo provincial. Las dos fuentes son independientes y
 coinciden todos los años 2015-2025 (diferencia menor a 2%).
 
-COLUMNAS REALES (`*_real_base2016_pesos`): pesos constantes, base promedio 2016 = 100,
-mismo IPC empalmado que el Núcleo 1 (`load_ipc_empalmado`):
-`real = nominal × (ipc_2016 / ipc_año)`.
+COLUMNAS REALES (`*_real_pesos_2025`): pesos constantes del promedio de 2025, la misma
+unidad que usan los gráficos del Núcleo 1, con el mismo IPC empalmado
+(`load_ipc_empalmado`): `real = nominal × (ipc_2025 / ipc_año)`.
 
 UNIDADES: el archivo rotula sus valores como "millones de pesos corrientes", pero están
 en PESOS corrientes (la fila de coparticipación coincide en pesos con la serie RON en
@@ -174,12 +174,12 @@ def build_ratio() -> pd.DataFrame:
     df["participacion_recursos_propios"] = df["recursos_propios_pesos"] / df["recaudacion_total_pesos"]
 
     ipc = load_ipc_empalmado()
-    ipc_2016 = float(ipc.loc[ipc["anio"] == 2016, "ipc_promedio_anual"].iloc[0])
+    ipc_2025 = float(ipc.loc[ipc["anio"] == 2025, "ipc_promedio_anual"].iloc[0])
     df = df.merge(ipc, on="anio", how="left")
     if df["ipc_promedio_anual"].isna().any():
         raise SystemExit("Falta IPC para algún año del alcance; no se deflacta con supuestos.")
     for col in ["recaudacion_total_pesos", "recursos_propios_pesos", "coparticipacion_pesos"]:
-        df[col.replace("_pesos", "_real_base2016_pesos")] = df[col] * ipc_2016 / df["ipc_promedio_anual"]
+        df[col.replace("_pesos", "_real_pesos_2025")] = df[col] * ipc_2025 / df["ipc_promedio_anual"]
     df = df.drop(columns=["ipc_promedio_anual"])
 
     copart_ron = pd.read_csv(COPART_PATH)
