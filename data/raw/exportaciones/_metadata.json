@@ -1,0 +1,18 @@
+{
+  "organismo": "INDEC, Origen provincial de las exportaciones (publicado por la Subsecretaría de Programación Macroeconómica en el portal de datos abiertos)",
+  "descripcion": "Exportaciones por provincia y rubro, datos anuales: total del país y Córdoba, por grandes rubros",
+  "obtenido_por": "descarga desde la API de series de tiempo de datos.gob.ar",
+  "fecha_incorporacion_al_repo": "2026-10-29",
+  "archivos": [
+    {
+      "archivo": "exportaciones_cordoba_y_total_por_rubro.csv",
+      "url_origen": "https://apis.datos.gob.ar/series/api/series/?ids=350.1_TOTAL_EXPONES__39,350.1_TOTAL_EXPO_PP__22,350.1_TOTAL_EXPOMOA__23,350.1_TOTAL_EXPOMOI__23,350.1_TOTAL_EXPOCYE__23,350.1_CORDOBA_TOOBA__21,350.1_CORDOBA_PP_PP__10,350.1_CORDOBA_MOMOA__11,350.1_CORDOBA_MOMOI__11,350.1_CORDOBA_CYCYE__11&format=csv&limit=1000&header=ids",
+      "sha256": "2296c1bbce0b3a01da79d90cde8f10f493635e12bc0475011b9e80d12cafb846",
+      "unidades": "millones de dólares (solo se usan participaciones, así que la unidad se cancela)",
+      "columnas": "total del país y Córdoba: total, productos primarios (PP), manufacturas de origen agropecuario (MOA), manufacturas de origen industrial (MOI) y combustibles y energía (CyE)",
+      "cobertura": "1993-2024",
+      "usado_en_nucleo_2": true,
+      "uso": "participación de Córdoba en las exportaciones, para repartir las retenciones nacionales por origen de la producción"
+    }
+  ]
+}

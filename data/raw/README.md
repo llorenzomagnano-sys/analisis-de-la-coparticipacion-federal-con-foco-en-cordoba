@@ -11,7 +11,10 @@ Esta carpeta tiene los datos crudos, tal como los conseguí. Nunca se editan a m
 | PBG por provincia — CEPAL | `pbg/` | 2 |
 | Coeficientes de coparticipación | `coeficientes/` | 2, 3 |
 | Recaudación de Córdoba — Dirección General de Rentas | `ingresos_cordoba/` | 4 |
-| Población por jurisdicción — INDEC, Censo 2022 | `poblacion/` | 5 |
+| Población por jurisdicción — INDEC, censos 2001, 2010 y 2022 | `poblacion/` | 1, 5 |
+| PIB nacional — INDEC, cuentas nacionales | `pib_nacional/` | 1 |
+| Derechos de exportación — Secretaría de Hacienda (vía datos.gob.ar) | `fiscal_nacional/` | 2 |
+| Exportaciones por provincia y rubro — INDEC (vía datos.gob.ar) | `exportaciones/` | 2 |
 
 ### Cómo los conseguí
 
@@ -36,11 +39,24 @@ Todos los archivos los descargué o los conseguí a mano y los versioné acá ta
 - **Archivo usado**: `ingresos_cordoba/serie_recaudacion_provincial.xlsx` (nombre original: `Serie-recaudacion-provincial_Ene15-Ago26.xlsx`), hoja `Serie_Mensual`: recaudación mensual por concepto, enero 2015 a agosto 2026. Para el Núcleo 4 uso solo años calendario completos, 2015-2025, y tres filas: el total, los recursos de origen provincial y la coparticipación federal.
 - **Limitación de alcance**: el total excluye lo recaudado por otros organismos públicos provinciales (por ejemplo, EPEC), según la nota al pie del archivo. El detalle, incluida la corrección de unidades (el archivo dice "millones de pesos" pero son pesos), está en `docs/methodology.md`.
 
-### Población por jurisdicción (Núcleo 5)
+### Población por jurisdicción (Núcleos 1 y 5)
 
 - **Organismo**: INDEC, Censo Nacional de Población, Hogares y Viviendas 2022, resultados definitivos.
 - **URL de origen**: <https://www.indec.gob.ar/ftp/cuadros/poblacion/c2022_tp_est_c1.xlsx> (listado en <https://www.indec.gob.ar/indec/web/Nivel4-Tema-2-41-165>).
-- **Archivo usado**: `poblacion/c2022_tp_est_c1.xlsx`, hoja `Cuadro 1 ` (con el espacio final del original), columna 2022. Las 24 jurisdicciones suman el total del país, 45.892.285 personas; el script lo controla.
+- **Archivo usado**: `poblacion/c2022_tp_est_c1.xlsx`, hoja `Cuadro 1 ` (con el espacio final del original), columnas 2010 y 2022. Las 24 jurisdicciones suman el total del país, 45.892.285 personas; el script lo controla.
+- **Censo 2001**: `poblacion/censos_2001_2010_cuadro8.csv`, transcripción de las columnas de población del Cuadro 8 del Tomo 1 de resultados definitivos del Censo 2010 (<https://www.indec.gob.ar/ftp/cuadros/poblacion/censo2010_tomo1.pdf>, página 64 del libro). El PDF pesa 12 MB y no lo versiono; su SHA-256 está en `_metadata.json`. La transcripción suma el total del país en 2001 y 2010, y su columna 2010 coincide con la del Censo 2022 en las 24 jurisdicciones (lo controla un test).
+
+### PIB nacional (Núcleo 1)
+
+- **Organismo**: INDEC, cuentas nacionales, año base 2004.
+- **URL de origen**: <https://www.indec.gob.ar/ftp/cuadros/economia/sh_oferta_demanda_09_26.xls> (listado en <https://www.indec.gob.ar/indec/web/Nivel4-Tema-3-9-47>).
+- **Archivo usado**: `pib_nacional/sh_oferta_demanda_09_26.xls`, hojas `cuadro 8` (precios corrientes) y `cuadro 1` (precios de 2004), fila "Producto Interno Bruto", columnas "Total" de cada año. Cubre 2004-2025; no tiene 2003.
+
+### Derechos de exportación y exportaciones por provincia (Núcleo 2)
+
+- **Derechos de exportación**: serie anual de recursos tributarios por tributo de la Secretaría de Hacienda, descargada de la API de series de tiempo de datos.gob.ar (`fiscal_nacional/derechos_exportacion_anual.csv`, millones de pesos corrientes, 1997-2025).
+- **Exportaciones por provincia y rubro**: INDEC (origen provincial de las exportaciones), misma API (`exportaciones/exportaciones_cordoba_y_total_por_rubro.csv`): total del país y Córdoba, por grandes rubros, 1993-2024.
+- Las URL exactas de descarga, con los ids de cada serie, están en el `_metadata.json` de cada carpeta.
 
 ## Otros archivos en esta carpeta
 
