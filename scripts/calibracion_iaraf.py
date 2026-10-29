@@ -24,11 +24,16 @@ Cómo se arma la masa coparticipable de referencia para el cuatrimestre:
   4. Dividida por la suma de los 24 coeficientes (~0,59) para pasar de lo que reciben
      las provincias a la masa total, que incluye la parte de Nación y del Fondo ATN.
 
-Lo que la calibración NO valida: el impacto en pesos sobre cada provincia sale
-directamente de los $1,4 billones repartidos por coeficiente, así que no depende de la
-masa estimada. La única cifra que depende de esa estimación es la variación %
-implícita, y no hay en el repositorio una serie independiente de masa coparticipable
-2026 contra la cual contrastarla.
+El impacto en pesos sobre cada provincia sale directamente de los $1,4 billones
+repartidos por coeficiente, así que no depende de la masa estimada; la variación %
+implícita sí.
+
+CONTRASTE (`contrastar_con_cordoba`): el archivo de Rentas de Córdoba del Núcleo 4 trae
+lo que la provincia efectivamente cobró en enero-abril de 2026. Comparando cada mes con
+el mismo mes de 2025 llevado a precios de 2026 con el IPC, se obtiene la variación real
+y la pérdida en pesos que tuvo Córdoba, contra las que estima el modelo. Se usa la parte
+de la coparticipación que sigue los coeficientes (sin la compensación ni el bono del
+Consenso Fiscal), que es lo que el simulador mueve.
 """
 import sys
 from pathlib import Path
@@ -36,6 +41,7 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(BASE_DIR / "scripts"))
 from build_comparativo_provincias import compensacion_consenso_fiscal  # noqa: E402
+from build_dependencia_fiscal import load_series_dgr_mensuales  # noqa: E402
 from coeficientes_ley23548 import COEFICIENTES_COPARTICIPACION  # noqa: E402
 from process_coparticipacion import load_ipc_nacional_mensual  # noqa: E402
 
@@ -77,6 +83,37 @@ def calibrar() -> dict:
     }
 
 
+def contrastar_con_cordoba() -> dict:
+    """Variación real y pérdida en pesos de la coparticipación proporcional de Córdoba en
+    el cuatrimestre según el archivo de Rentas, contra lo que estima el modelo."""
+    mensual = load_series_dgr_mensuales()
+    proporcional = mensual["coparticipacion_pesos"] - mensual["compensacion_consenso_fiscal_pesos"]
+    ipc = load_ipc_nacional_mensual().set_index("Periodo")["Indice_IPC"]
+
+    periodos_previos = [p - 100 for p in PERIODOS_CUATRIMESTRE]
+    necesarios = set(PERIODOS_CUATRIMESTRE + periodos_previos)
+    faltantes = (necesarios - set(proporcional.index)) | (necesarios - set(ipc.index))
+    if faltantes:
+        raise SystemExit(f"Faltan datos de Córdoba o de IPC para {sorted(faltantes)}; no se contrasta.")
+
+    observado = proporcional.loc[PERIODOS_CUATRIMESTRE].sum()
+    previo_a_precios_actuales = sum(
+        proporcional.loc[previo] * ipc.loc[actual] / ipc.loc[previo]
+        for previo, actual in zip(periodos_previos, PERIODOS_CUATRIMESTRE)
+    )
+
+    coeficiente_cordoba = COEFICIENTES_COPARTICIPACION["Córdoba"]
+    suma_coeficientes = sum(COEFICIENTES_COPARTICIPACION.values())
+    return {
+        "variacion_real_observada": observado / previo_a_precios_actuales - 1,
+        "perdida_observada_pesos": observado - previo_a_precios_actuales,
+        "variacion_modelo": calibrar()["variacion_implicita"],
+        "perdida_modelo_pesos": IMPACTO_PROVINCIAS_IARAF * coeficiente_cordoba / suma_coeficientes,
+    }
+
+
 if __name__ == "__main__":
     for clave, valor in calibrar().items():
+        print(f"{clave}: {valor:,.4f}")
+    for clave, valor in contrastar_con_cordoba().items():
         print(f"{clave}: {valor:,.4f}")

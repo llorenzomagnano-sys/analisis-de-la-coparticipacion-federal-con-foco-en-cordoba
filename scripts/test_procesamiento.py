@@ -12,7 +12,7 @@ import pytest
 from build_coefficients_comparison import OUTPUT_PATH as APORTE_PATH
 from build_comparativo_provincias import build_comparativo, participaciones_anuales
 from build_dependencia_fiscal import base_calibrada_cordoba, build_ratio, calcular_sensibilidad
-from calibracion_iaraf import calibrar
+from calibracion_iaraf import IMPACTO_PROVINCIAS_IARAF, calibrar, contrastar_con_cordoba
 from coeficientes_ley23548 import COEFICIENTES_COPARTICIPACION
 from process_coparticipacion import (
     CONCEPTO_GANANCIAS_PRE_2018,
@@ -59,14 +59,13 @@ def test_serie_de_coparticipacion_tiene_24_jurisdicciones_por_23_anios():
 def test_aporte_vs_recibo_compara_participaciones_que_suman_uno():
     df = pd.read_csv(APORTE_PATH)
     assert df["pct_coparticipacion_entre_provincias"].sum() == pytest.approx(1.0)
-    # El PBG trae además una fila "No distribuido", por eso no suma exactamente 1.
-    assert df["pct_pbg_aporte"].sum() == pytest.approx(1.0, abs=0.01)
+    assert df["pct_pbg_aporte"].sum() == pytest.approx(1.0)
 
 
 def test_ratio_de_dependencia_usa_partes_del_mismo_total(dependencia):
     d = dependencia
-    assert ((d["ratio_coparticipacion_ingresos"] > 0) & (d["ratio_coparticipacion_ingresos"] < 1)).all()
-    assert (d["coparticipacion_pesos"] + d["recursos_propios_pesos"] <= d["ingresos_totales_pesos"]).all()
+    assert ((d["ratio_coparticipacion_recaudacion"] > 0) & (d["ratio_coparticipacion_recaudacion"] < 1)).all()
+    assert (d["coparticipacion_pesos"] + d["recursos_propios_pesos"] <= d["recaudacion_total_pesos"]).all()
 
 
 def test_nacion_y_provincia_registran_la_misma_coparticipacion_todos_los_anios(dependencia):
@@ -113,14 +112,26 @@ def test_sensibilidad_es_el_shock_por_la_parte_proporcional_de_la_dependencia(de
     sens = calcular_sensibilidad(2025, [-0.10]).iloc[0]
     fila = dependencia.loc[2025]
     proporcional = fila["coparticipacion_pesos"] - fila["compensacion_consenso_fiscal_pesos"]
-    esperado = -0.10 * proporcional / fila["ingresos_totales_pesos"]
-    assert sens["impacto_pct_ingresos_totales_cordoba"] == pytest.approx(esperado)
+    esperado = -0.10 * proporcional / fila["recaudacion_total_pesos"]
+    assert sens["impacto_pct_recaudacion_total_cordoba"] == pytest.approx(esperado)
 
 
 def test_calibracion_lleva_la_base_a_precios_del_cuatrimestre():
     calibracion = calibrar()
     assert calibracion["ajuste_precios"] > 1
     assert -0.20 < calibracion["variacion_implicita"] < 0
+
+
+def test_contraste_con_cordoba_compara_el_mismo_cuatrimestre():
+    contraste = contrastar_con_cordoba()
+    # La pérdida y la variación salen de la misma base: pérdida / variación = enero-abril de
+    # 2025 a precios de 2026, que tiene que ser del orden de lo que cobró Córdoba (~$1,8
+    # billones). Si se mezclaran meses o años, esa base quedaría muy lejos.
+    base = contraste["perdida_observada_pesos"] / contraste["variacion_real_observada"]
+    assert 1.5e12 < base < 2.2e12
+    assert contraste["perdida_modelo_pesos"] == pytest.approx(
+        IMPACTO_PROVINCIAS_IARAF * COEFICIENTES_COPARTICIPACION["Córdoba"] / sum(COEFICIENTES_COPARTICIPACION.values())
+    )
 
 
 def test_simulador_web_usa_los_datos_del_repositorio():
@@ -130,11 +141,11 @@ def test_simulador_web_usa_los_datos_del_repositorio():
     def constante(nombre):
         return float(re.search(rf"var {nombre} = ([0-9.]+);", html).group(1))
 
-    _base, coparticipacion, ingresos = base_calibrada_cordoba(2025)
+    _base, coparticipacion, recaudacion_total = base_calibrada_cordoba(2025)
     fila = build_ratio().set_index("anio").loc[2025]
     proporcional = coparticipacion - fila["compensacion_consenso_fiscal_pesos"]
     assert constante("COPARTICIPACION_PROPORCIONAL_CORDOBA_2025") == pytest.approx(proporcional, rel=1e-9)
-    assert constante("INGRESOS_TOTALES_CORDOBA_2025") == pytest.approx(ingresos, rel=1e-9)
+    assert constante("RECAUDACION_TOTAL_CORDOBA_2025") == pytest.approx(recaudacion_total, rel=1e-9)
     assert constante("COEF_CORDOBA") == pytest.approx(COEFICIENTES_COPARTICIPACION["Córdoba"])
 
     escenario = f"{calibrar()['variacion_implicita'] * 100:.1f}"

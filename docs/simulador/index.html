@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Simulador de coparticipación · Córdoba</title>
-<meta name="description" content="Cuánto cambian los ingresos de Córdoba ante un shock en la recaudación nacional coparticipable.">
+<meta name="description" content="Cuánto cambia la recaudación total de Córdoba ante un shock en la recaudación nacional coparticipable.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -255,8 +255,8 @@
     <div class="eyebrow">Coparticipación federal · Córdoba</div>
     <h1>¿Qué le pasa a Córdoba si cae la recaudación nacional?</h1>
     <p class="intro">
-      Elegí un shock en la recaudación nacional coparticipable y mirá cuánto cambian los
-      ingresos de Córdoba, con los datos de 2025. Es la misma fórmula de
+      Elegí un shock en la recaudación nacional coparticipable y mirá cuánto cambia la
+      recaudación total de Córdoba, con los datos de 2025. Es la misma fórmula de
       <code>scripts/simulator.py</code>, calculada en el navegador.
     </p>
   </header>
@@ -281,13 +281,13 @@
     <hr class="divider">
 
     <div class="stat">
-      <div class="stat-eyebrow">Impacto en los ingresos totales de Córdoba</div>
+      <div class="stat-eyebrow">Impacto en la recaudación total de Córdoba</div>
       <div class="stat-value" id="stat-value">−3,3&nbsp;%</div>
       <div class="stat-sub" id="stat-sub"></div>
       <div class="stat-micro">
         La parte de la coparticipación que se reparte por coeficiente explicó el 52,4&nbsp;% de
-        los ingresos de Córdoba en 2025, así que el impacto en sus ingresos es el shock
-        multiplicado por esa proporción. Como el reparto es proporcional al coeficiente, en
+        la recaudación total de Córdoba en 2025, así que el impacto en esa recaudación es el
+        shock multiplicado por esa proporción. Como el reparto es proporcional al coeficiente, en
         porcentaje de su coparticipación Córdoba pierde lo mismo que cualquier otra provincia.
       </div>
     </div>
@@ -306,9 +306,11 @@
   <div class="footnote">
     <p>
       Base de cálculo: coparticipación federal recibida por Córdoba en 2025 ($4,74
-      billones, incluido el Financiamiento Educativo) e ingresos totales de la provincia ese
-      año ($8,94 billones), ambos del archivo de recaudación de la Dirección General de
-      Rentas de Córdoba. La compensación del Consenso Fiscal ($0,06 billones) queda afuera
+      billones, incluido el Financiamiento Educativo) y recaudación total de la provincia ese
+      año ($8,94 billones: recursos propios que administra Rentas más recursos de origen
+      nacional), ambos del archivo de recaudación de la Dirección General de Rentas de
+      Córdoba. No son los ingresos corrientes del presupuesto provincial, que suman además,
+      por ejemplo, los aportes a la Caja de Jubilaciones. La compensación del Consenso Fiscal ($0,06 billones) queda afuera
       del shock porque es un monto fijo, no un porcentaje de lo recaudado. El shock se
       reparte de forma proporcional a toda la masa coparticipable, sin distinguir por
       impuesto, y no modela respuestas de la provincia (más recaudación propia, ajuste de
@@ -328,7 +330,7 @@
   // Datos 2025 de data/processed/dependencia_fiscal_cordoba.csv: coparticipación menos
   // la compensación del Consenso Fiscal (la parte que se reparte por coeficiente).
   var COPARTICIPACION_PROPORCIONAL_CORDOBA_2025 = 4683858285352.35;
-  var INGRESOS_TOTALES_CORDOBA_2025 = 8936027170277.15;
+  var RECAUDACION_TOTAL_CORDOBA_2025 = 8936027170277.15;
   var COEF_CORDOBA = 0.05039652;
   // Masa coparticipable total calibrada para que el coeficiente de Córdoba reproduzca
   // esa coparticipación 2025 (igual que base_calibrada_cordoba en Python).
@@ -359,16 +361,16 @@
     var variacion = variacionPct / 100;
 
     var impactoPesos = RECAUDACION_BASE * variacion * COEF_CORDOBA;
-    var impactoPctIngresos = impactoPesos / INGRESOS_TOTALES_CORDOBA_2025;
+    var impactoPctRecaudacion = impactoPesos / RECAUDACION_TOTAL_CORDOBA_2025;
     var negativo = impactoPesos < 0;
 
     readout.textContent = fmtPct(variacion, 1);
-    statValue.textContent = fmtPct(impactoPctIngresos, 1);
+    statValue.textContent = fmtPct(impactoPctRecaudacion, 1);
     statValue.classList.toggle("negative", negativo);
     statValue.classList.toggle("positive", !negativo && impactoPesos !== 0);
 
     statSub.innerHTML = "<strong>" + fmtMilMillones(impactoPesos) +
-      "</strong> de coparticipación en un año, sobre ingresos totales de " +
+      "</strong> de coparticipación en un año, sobre una recaudación total de " +
       "<strong>$8,94 billones</strong>.";
 
     var rango = 30;

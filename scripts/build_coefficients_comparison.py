@@ -1,6 +1,6 @@
 """
 Núcleo 2 — Compara, para cada provincia, cuánto "aporta" (proxy: % de su PBG sobre el
-PBG total del país) contra cuánto "recibe" (% de lo que se reparte entre las 24
+PBG de las 24 jurisdicciones) contra cuánto "recibe" (% de lo que se reparte entre las 24
 jurisdicciones según los coeficientes de la Ley 23.548).
 
 Notas (detalle completo en docs/methodology.md):
@@ -14,7 +14,8 @@ Notas (detalle completo en docs/methodology.md):
   renormalizan: `pct_coparticipacion_entre_provincias = coef / suma(coefs)`. Sin ese
   paso, toda provincia queda con brecha negativa en proporción a su tamaño y el ranking
   mide escala, no reparto.
-- PBG 2024 (el año más reciente de la fuente, preliminar).
+- PBG 2024 (el año más reciente de la fuente, preliminar), como % de la suma de las 24
+  jurisdicciones (sin la fila "No distribuido" de la fuente).
 - El PBG es un PROXY del aporte tributario: las grandes empresas tributan donde tienen
   sede fiscal (muchas veces CABA), no necesariamente donde generan la actividad.
 """
@@ -83,18 +84,16 @@ def load_pbg_pct(year: int) -> pd.DataFrame:
     data = data.dropna(subset=["jurisdiccion"])
     data["jurisdiccion"] = data["jurisdiccion"].astype(str).str.strip()
 
-    total_row = data[data["jurisdiccion"] == "Total"]
-    if total_row.empty:
-        raise SystemExit(f"No se encontró la fila 'Total' en {PBG_PATH}.")
-    total_pbg = float(total_row["pbg"].iloc[0])
-
     data = data[data["jurisdiccion"].isin(PROVINCIA_CANONICA)]
-    provincias_sin_mapear = set(data["jurisdiccion"]) - set(PROVINCIA_CANONICA)
-    if provincias_sin_mapear:
-        raise SystemExit(f"Jurisdicciones sin mapeo: {sorted(provincias_sin_mapear)}")
+    if len(data) != len(PROVINCIA_CANONICA):
+        faltantes = set(PROVINCIA_CANONICA) - set(data["jurisdiccion"])
+        raise SystemExit(f"Jurisdicciones que no aparecen en {PBG_PATH}: {sorted(faltantes)}")
 
+    # Participación sobre la suma de las 24, no sobre la fila "Total" de la fuente, que
+    # incluye además lo "No distribuido" entre jurisdicciones (~0,06%): así suma 100%, igual
+    # que la porción del reparto contra la que se compara.
     data["provincia"] = data["jurisdiccion"].map(PROVINCIA_CANONICA)
-    data["pct_pbg_aporte"] = data["pbg"].astype(float) / total_pbg
+    data["pct_pbg_aporte"] = data["pbg"].astype(float) / data["pbg"].astype(float).sum()
 
     return data[["provincia", "pct_pbg_aporte"]]
 
